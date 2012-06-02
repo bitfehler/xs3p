@@ -96,7 +96,7 @@
 
    <xsl:output
     method="xml"
-    encoding="ISO-8859-1"
+    encoding="UTF-8"
     standalone="yes"
     version="1.0"
     doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -259,7 +259,7 @@
             <title><xsl:value-of select="$actualTitle"/></title>
 
             <!-- Set content type -->
-            <meta http-equiv="Content-Type" content="text/xml; charset=iso-8859-1"/>
+            <meta http-equiv="Content-Type" content="text/xml; charset=utf-8"/>
 
             <!-- Set base URL to use in working out relative paths -->
             <xsl:if test="$baseURL != ''">
