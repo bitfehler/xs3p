@@ -152,7 +152,7 @@
 	<xs:element ref="xs:notation"/>
   </xs:choice>
  </xs:group>
- 
+
  <xs:group name="redefinable">
   <xs:annotation>
 	<xs:documentation>
@@ -197,7 +197,7 @@
 	#all or (possibly empty) subset of {extension, restriction}</xs:documentation>
   </xs:annotation>
   <xs:union>
-	<xs:simpleType>	 
+	<xs:simpleType>
 	 <xs:restriction base="xs:token">
 	  <xs:enumeration value="#all"/>
 	 </xs:restriction>
@@ -253,17 +253,17 @@
 	<xs:selector xpath="xs:complexType|xs:simpleType"/>
 	<xs:field xpath="@name"/>
   </xs:key>
- 
+
   <xs:key name="group">
 	<xs:selector xpath="xs:group"/>
 	<xs:field xpath="@name"/>
   </xs:key>
- 
+
   <xs:key name="attributeGroup">
 	<xs:selector xpath="xs:attributeGroup"/>
 	<xs:field xpath="@name"/>
   </xs:key>
- 
+
   <xs:key name="notation">
 	<xs:selector xpath="xs:notation"/>
 	<xs:field xpath="@name"/>
@@ -314,8 +314,8 @@
 	<xs:element ref="xs:sequence"/>
   </xs:choice>
  </xs:group>
- 
- 
+
+
 
  <xs:group name="nestedParticle">
   <xs:choice>
@@ -326,7 +326,7 @@
 	<xs:element ref="xs:any"/>
   </xs:choice>
  </xs:group>
- 
+
  <xs:group name="particle">
   <xs:choice>
 	<xs:element name="element" type="xs:localElement"/>
@@ -337,7 +337,7 @@
 	<xs:element ref="xs:any"/>
   </xs:choice>
  </xs:group>
- 
+
  <xs:complexType name="attribute">
   <xs:complexContent>
 	<xs:extension base="xs:annotated">
@@ -361,7 +361,7 @@
 	</xs:extension>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="topLevelAttribute">
   <xs:complexContent>
 	<xs:restriction base="xs:attribute">
@@ -437,7 +437,7 @@
 	</xs:extension>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="topLevelComplexType">
   <xs:complexContent>
 	<xs:restriction base="xs:complexType">
@@ -450,7 +450,7 @@
 	</xs:restriction>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="localComplexType">
   <xs:complexContent>
 	<xs:restriction base="xs:complexType">
@@ -466,7 +466,7 @@
 	</xs:restriction>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="restrictionType">
   <xs:complexContent>
 	<xs:extension base="xs:annotated">
@@ -479,7 +479,7 @@
 	 </xs:sequence>
 	 <xs:attribute name="base" type="xs:QName" use="required"/>
 	</xs:extension>
-  </xs:complexContent>		  
+  </xs:complexContent>
  </xs:complexType>
 
  <xs:complexType name="complexRestrictionType">
@@ -498,7 +498,7 @@
 	 </xs:sequence>
 	 <xs:anyAttribute namespace="##other" processContents="lax"/>
 	</xs:restriction>
-  </xs:complexContent>		  
+  </xs:complexContent>
  </xs:complexType>
 
  <xs:complexType name="extensionType">
@@ -510,7 +510,7 @@
 	 </xs:sequence>
 	 <xs:attribute name="base" type="xs:QName" use="required"/>
 	</xs:extension>
-  </xs:complexContent>		  
+  </xs:complexContent>
  </xs:complexType>
 
  <xs:element name="complexContent" id="complexContent">
@@ -523,7 +523,7 @@
 	  <xs:choice>
 		<xs:element name="restriction" type="xs:complexRestrictionType"/>
 		<xs:element name="extension" type="xs:extensionType"/>
-	  </xs:choice> 	 
+	  </xs:choice>
 	  <xs:attribute name="mixed" type="xs:boolean">
 		<xs:annotation>
 		 <xs:documentation>
@@ -585,7 +585,7 @@
 	</xs:complexContent>
   </xs:complexType>
  </xs:element>
- 
+
  <xs:element name="complexType" type="xs:topLevelComplexType" id="complexType">
   <xs:annotation>
 	<xs:documentation source="http://www.w3.org/TR/xmlschema-1/#element-complexType"/>
@@ -602,7 +602,7 @@
 	 restriction}</xs:documentation>
 	</xs:annotation>
 	<xs:union>
-	 <xs:simpleType>	  
+	 <xs:simpleType>
 	  <xs:restriction base="xs:token">
 		<xs:enumeration value="#all"/>
 	  </xs:restriction>
@@ -618,7 +618,7 @@
 		</xs:simpleType>
 	  </xs:list>
 	 </xs:simpleType>
-	</xs:union>  
+	</xs:union>
   </xs:simpleType>
 
  <xs:complexType name="element" abstract="true">
@@ -654,7 +654,7 @@
 	</xs:extension>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="topLevelElement">
   <xs:complexContent>
 	<xs:restriction base="xs:element">
@@ -675,7 +675,7 @@
 	</xs:restriction>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="localElement">
   <xs:complexContent>
 	<xs:restriction base="xs:element">
@@ -715,7 +715,7 @@
 	</xs:extension>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="realGroup">
   <xs:complexContent>
 	<xs:restriction base="xs:group">
@@ -793,7 +793,7 @@
 	</xs:restriction>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="simpleExplicitGroup">
   <xs:complexContent>
 	<xs:restriction base="xs:explicitGroup">
@@ -807,7 +807,7 @@
 	</xs:restriction>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:group name="allModel">
   <xs:sequence>
 		<xs:element ref="xs:annotation" minOccurs="0"/>
@@ -851,7 +851,7 @@
 			  <xs:anyAttribute namespace="##other" processContents="lax"/>
 			 </xs:restriction>
 			</xs:complexContent>
-		  </xs:complexType>	  
+		  </xs:complexType>
 		 </xs:element>
 		</xs:choice>
 	  </xs:sequence>
@@ -952,7 +952,7 @@
 				  ##other	 - - any non-conflicting WFXML/attribute from
 										namespace other than targetNS
 
-				  ##local	 - - any unqualified non-conflicting WFXML/attribute 
+				  ##local	 - - any unqualified non-conflicting WFXML/attribute
 
 				  one or 	 - - any non-conflicting WFXML/attribute from
 				  more URI			the listed namespaces
@@ -1007,7 +1007,7 @@
 	</xs:extension>
   </xs:complexContent>
  </xs:complexType>
- 
+
  <xs:complexType name="namedAttributeGroup">
   <xs:complexContent>
 	<xs:restriction base="xs:attributeGroup">
@@ -1105,10 +1105,10 @@ use</xs:documentation>
 		  <xs:annotation>
 			<xs:documentation>The following pattern is intended to allow XPath
 									expressions per the following EBNF:
-			 Selector	 ::=	  Path ( '|' Path )*  
-			 Path 	::=	 ('.//')? Step ( '/' Step )*	
-			 Step 	::=	 '.' | NameTest  
-			 NameTest	 ::=	  QName | '*' | NCName ':' '*'  
+			 Selector	 ::=	  Path ( '|' Path )*
+			 Path 	::=	 ('.//')? Step ( '/' Step )*
+			 Step 	::=	 '.' | NameTest
+			 NameTest	 ::=	  QName | '*' | NCName ':' '*'
 									child:: is also allowed
 			</xs:documentation>
 		  </xs:annotation>
@@ -1142,7 +1142,7 @@ use</xs:documentation>
 			<xs:documentation>The following pattern is intended to allow XPath
 									expressions per the same EBNF as for selector,
 									with the following change:
-			 Path 	::=	 ('.//')? ( Step '/' )* ( Step | '@' NameTest ) 
+			 Path 	::=	 ('.//')? ( Step '/' )* ( Step | '@' NameTest )
 			</xs:documentation>
 		  </xs:annotation>
 		  <xs:pattern value="(\.//)?((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)/)*((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)|((attribute::|@)((\i\c*:)?(\i\c*|\*))))(\|(\.//)?((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)/)*((((child::)?((\i\c*:)?(\i\c*|\*)))|\.)|((attribute::|@)((\i\c*:)?(\i\c*|\*)))))*">
@@ -1277,7 +1277,7 @@ use</xs:documentation>
 
  <xs:notation name="XMLSchemaStructures" public="structures" system="http://www.w3.org/2000/08/XMLSchema.xsd"/>
  <xs:notation name="XML" public="REC-xml-19980210" system="http://www.w3.org/TR/1998/REC-xml-19980210"/>
- 
+
  <xs:complexType name="anyType" mixed="true">
   <xs:annotation>
 	<xs:documentation>
@@ -1305,18 +1305,18 @@ use</xs:documentation>
 		as follows:
 		  1) the base URI is the URI of the XML Schema namespace
 		  2) the fragment identifier is the name of the datatype
-		  
+
 		For example, to address the int datatype, the URI is:
-		
+
 		  http://www.w3.org/2001/XMLSchema#int
-		
+
 		Additionally, each facet definition element can be uniquely
 		addressed via a URI constructed as follows:
 		  1) the base URI is the URI of the XML Schema namespace
 		  2) the fragment identifier is the name of the facet
-		  
+
 		For example, to address the maxInclusive facet, the URI is:
-		
+
 		  http://www.w3.org/2001/XMLSchema#maxInclusive
 
 		Additionally, each facet usage in a built-in datatype definition
@@ -1324,15 +1324,15 @@ use</xs:documentation>
 		  1) the base URI is the URI of the XML Schema namespace
 		  2) the fragment identifier is the name of the datatype, followed
 			  by a period (".") followed by the name of the facet
-		  
+
 		For example, to address the usage of the maxInclusive facet in
 		the definition of int, the URI is:
-		
+
 		  http://www.w3.org/2001/XMLSchema#int.maxInclusive
-		  
+
 	 </xs:documentation>
   </xs:annotation>
- 
+
   <xs:simpleType name="string" id="string">
 	 <xs:annotation>
 		<xs:appinfo>
@@ -1697,7 +1697,7 @@ use</xs:documentation>
 		  id="hexBinary.whiteSpace"/>
 	 </xs:restriction>
 	</xs:simpleType>
- 
+
  <xs:simpleType name="base64Binary" id="base64Binary">
 	 <xs:annotation>
 		<xs:appinfo>
@@ -1816,7 +1816,7 @@ use</xs:documentation>
 		  id="normalizedString.whiteSpace"/>
 	 </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="token" id="token">
 	 <xs:annotation>
 		<xs:documentation
@@ -1826,7 +1826,7 @@ use</xs:documentation>
 		<xs:whiteSpace value="collapse" id="token.whiteSpace"/>
 	 </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="language" id="language">
 	 <xs:annotation>
 		<xs:documentation
@@ -1866,7 +1866,7 @@ use</xs:documentation>
 	 </xs:annotation>
 	 <xs:restriction>
 		<xs:simpleType>
-		  <xs:list itemType="xs:IDREF"/> 	
+		  <xs:list itemType="xs:IDREF"/>
 		</xs:simpleType>
 		  <xs:minLength value="1" id="IDREFS.minLength"/>
 	 </xs:restriction>
@@ -2173,7 +2173,7 @@ use</xs:documentation>
 	A utility type, not for public use</xs:documentation>
   </xs:annotation>
   <xs:union>
-	<xs:simpleType>	 
+	<xs:simpleType>
 	 <xs:restriction base="xs:token">
 	  <xs:enumeration value="#all"/>
 	 </xs:restriction>
@@ -2237,7 +2237,7 @@ use</xs:documentation>
 				  Forbidden when nested
 				</xs:documentation>
 			 </xs:annotation>
-		  </xs:attribute>   
+		  </xs:attribute>
 		  <xs:attribute name="final" use="prohibited"/>
 		 <xs:anyAttribute namespace="##other" processContents="lax"/>
 		</xs:restriction>
@@ -2345,7 +2345,7 @@ use</xs:documentation>
 		</xs:complexContent>
 	 </xs:complexType>
   </xs:element>
-  
+
   <xs:complexType name="facet">
 	 <xs:complexContent>
 		<xs:extension base="xs:annotated">
@@ -2355,7 +2355,7 @@ use</xs:documentation>
 		</xs:extension>
 	 </xs:complexContent>
   </xs:complexType>
- 
+
  <xs:complexType name="noFixedFacet">
   <xs:complexContent>
 	<xs:restriction base="xs:facet">
@@ -2448,7 +2448,7 @@ use</xs:documentation>
 		  source="http://www.w3.org/TR/xmlschema-2/#element-maxLength"/>
 	 </xs:annotation>
   </xs:element>
-  
+
   <xs:element name="enumeration" id="enumeration" type="xs:noFixedFacet">
 	 <xs:annotation>
 		<xs:documentation
