@@ -1644,6 +1644,28 @@ table.hierarchy th, table.hierarchy td {
    padding: 5px;
 }
 
+/* Annotations section */
+div.annotation {
+   width: 90%;
+   padding: 5px 10px;
+   font-size: 12pt;
+}
+div.annotation pre {
+   border: 1px dashed #999;
+   background-color: #eee;
+   margin: 0px 10px;
+   padding: 2px;
+}
+div.annotation table {
+   margin-left: 10px;
+}
+div.annotation th {
+   background-color: #ccc;
+}
+div.annotation td {
+   background-color: #eee;
+}
+
 /* XML Instance Representation table */
 div.sample {
    width: 90%;
@@ -2829,11 +2851,11 @@ div#legend div.hint {
                <td><xsl:value-of select="@fixed"/></td>
             </tr>
          </xsl:if>
-         <!-- Annotation -->
-         <xsl:call-template name="PrintAnnotation">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
       </table>
+      <!-- Annotation -->
+      <xsl:call-template name="PrintAnnotation">
+         <xsl:with-param name="component" select="."/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -2847,11 +2869,11 @@ div#legend div.hint {
             <th>Name</th>
             <td><xsl:value-of select="@name"/></td>
          </tr>
-         <!-- Annotation -->
-         <xsl:call-template name="PrintAnnotation">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
       </table>
+      <!-- Annotation -->
+      <xsl:call-template name="PrintAnnotation">
+         <xsl:with-param name="component" select="."/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -2931,11 +2953,11 @@ div#legend div.hint {
                <td><xsl:value-of select="$block"/></td>
             </tr>
          </xsl:if>
-         <!-- Annotation -->
-         <xsl:call-template name="PrintAnnotation">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
       </table>
+      <!-- Annotation -->
+      <xsl:call-template name="PrintAnnotation">
+         <xsl:with-param name="component" select="."/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -3065,11 +3087,11 @@ div#legend div.hint {
                <td><xsl:value-of select="$block"/></td>
             </tr>
          </xsl:if>
-         <!-- Annotation -->
-         <xsl:call-template name="PrintAnnotation">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
       </table>
+      <!-- Annotation -->
+      <xsl:call-template name="PrintAnnotation">
+         <xsl:with-param name="component" select="."/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -3095,11 +3117,11 @@ div#legend div.hint {
                <td><xsl:value-of select="@system"/></td>
             </tr>
          </xsl:if>
-         <!-- Annotation -->
-         <xsl:call-template name="PrintAnnotation">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
       </table>
+      <!-- Annotation -->
+      <xsl:call-template name="PrintAnnotation">
+         <xsl:with-param name="component" select="."/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -3233,11 +3255,11 @@ div#legend div.hint {
                </td>
             </tr>
          </xsl:if>
-         <!-- Annotation -->
-         <xsl:call-template name="PrintAnnotation">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
       </table>
+      <!-- Annotation -->
+      <xsl:call-template name="PrintAnnotation">
+         <xsl:with-param name="component" select="."/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -3286,11 +3308,11 @@ div#legend div.hint {
                <td><xsl:value-of select="$final"/></td>
             </tr>
          </xsl:if>
-         <!-- Annotation -->
-         <xsl:call-template name="PrintAnnotation">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
       </table>
+      <!-- Annotation -->
+      <xsl:call-template name="PrintAnnotation">
+         <xsl:with-param name="component" select="."/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -3299,9 +3321,7 @@ div#legend div.hint {
    <xsl:template match="*" mode="properties"/>
 
    <!--
-     Prints out the rows to display 'annotation' elements of an
-     component in the Properties table. This template assumes it
-     will be called within an HTML 'table' element.
+     Displays 'annotation' elements of an component as main documentation.
         Param(s):
             component (Node) required
                 Schema component
@@ -3310,26 +3330,27 @@ div#legend div.hint {
       <xsl:param name="component"/>
 
       <xsl:if test="$component/xsd:annotation/xsd:documentation">
-         <tr>
-            <th>Documentation</th>
-            <td>
-               <xsl:for-each select="$component/xsd:annotation/xsd:documentation">
-                  <xsl:if test="position()!=1"><br/><br/></xsl:if>
-                  <xsl:apply-templates select="." mode="properties"/>
-               </xsl:for-each>
-            </td>
-         </tr>
+         <xsl:for-each select="$component/xsd:annotation/xsd:documentation">
+            <xsl:if test="position()!=1"><br/><br/></xsl:if>
+            <div class="annotation documentation" id="wdoc_{generate-id(.)}">
+               <xsl:apply-templates select="." mode="properties"/>
+            </div>
+            <script type="text/javascript">
+               var block = document.getElementById("wdoc_<xsl:value-of select="generate-id(.)"/>");
+               var content = block.childNodes[0].nodeValue;
+               block.innerHTML = '';
+               creole.parse(block, content);
+            </script>
+         </xsl:for-each>
       </xsl:if>
       <xsl:if test="$component/xsd:annotation/xsd:appinfo">
-         <tr>
-            <th>Application Data</th>
-            <td>
-               <xsl:for-each select="$component/xsd:annotation/xsd:appinfo">
-                  <xsl:if test="position()!=1"><br/><br/></xsl:if>
-                  <xsl:apply-templates select="." mode="properties"/>
-               </xsl:for-each>
-            </td>
-         </tr>
+         <div class="annotation appinfo">
+            <h3>Application Data</h3>
+            <xsl:for-each select="$component/xsd:annotation/xsd:appinfo">
+               <xsl:if test="position()!=1"><br/><br/></xsl:if>
+               <xsl:apply-templates select="." mode="properties"/>
+            </xsl:for-each>
+         </div>
       </xsl:if>
    </xsl:template>
 
