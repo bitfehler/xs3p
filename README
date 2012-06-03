@@ -12,3 +12,9 @@ Added features include:
  - Output of UTF-8 files
  - Usage of Creole wiki syntax in <documentation> sections
 
+You can see an example result at:
+
+  http://bitfehler.net/xs3p/address_annotated.xsd.html
+
+which is the result of the included examples/address_annotation.xsd.
+
