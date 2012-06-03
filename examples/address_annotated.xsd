@@ -1,0 +1,91 @@
+<schema targetNamespace="http://www.example.com/IPO"
+        xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:ipo="http://www.example.com/IPO">
+
+ <annotation>
+  <documentation xml:lang="en">
+   **Addresses for International Purchase order schema
+   Copyright 2000 Example.com. All rights reserved.**
+
+   This version of the schema has enhanced documentation to
+   demonstrate the new capabilities of the xs3p doc tool:
+
+    * Display of {{{&lt;annotation&gt;}}} info with //Creole// wiki markup
+    * Output of UTF-8
+
+   The //Creole// wiki markup is documented in the [[http://www.wikicreole.org/|WikiCreole website]].
+  </documentation>
+ </annotation>
+
+ <complexType name="Address">
+  <annotation>
+   <documentation>
+    The generic base type for all country-specific addresses.
+
+    This type could be used for addresses that don't have distinct type,
+    but then it would have poor validation. Just to demonstrate UTF-8 and
+    a creole markup {{{&lt;pre&gt;}}} block, here is an example german 
+    address:
+
+{{{
+&lt;name&gt;Conrad Hoffmann&lt;/name&gt;
+&lt;street&gt;Beispielstraße 23&lt;/street&gt;
+&lt;city&gt;D-12345 Berlin&lt;/city&gt;
+}}}
+
+    **Note:** Whenever possible, a distinct subtype should be specified.
+   </documentation>
+  </annotation>
+  <sequence>
+   <element name="name"   type="string"/>
+   <element name="street" type="string"/>
+   <element name="city"   type="string"/>
+  </sequence>
+ </complexType>
+
+ <complexType name="USAddress">
+  <annotation>
+   <documentation>
+    Address subtype for United States addresses.
+
+    The state comes from a list [[#type_USState|below]].
+   </documentation>
+  </annotation>
+  <complexContent>
+   <extension base="ipo:Address">
+    <sequence>
+     <element name="state" type="ipo:USState"/>
+     <element name="zip"   type="positiveInteger"/>
+    </sequence>
+   </extension>
+  </complexContent>
+ </complexType>
+
+ <!-- other Address derivations for more countries -->
+
+ <simpleType name="USState">
+  <annotation>
+   <documentation>
+    If this list was complete, it would have the following states:
+
+|=Code |=State |
+| AL | Alabama |
+| AK | Alaska |
+| AZ | Arizona |
+| AR | Arkansas |
+| CA | California |
+
+    ...and so on. A nice way to use tables in the documentation!
+   </documentation>
+  </annotation>
+  <restriction base="string">
+   <enumeration value="AK"/>
+   <enumeration value="AL"/>
+   <enumeration value="AR"/>
+   <!-- and so on ... -->
+  </restriction>
+ </simpleType>
+
+ <!-- simple type definition for UKPostcode -->
+
+</schema>
