@@ -1,0 +1,14 @@
+xs3p XSD documentation generator
+================================
+
+This is a fork of version 1.1.5 of the xs3p doc tool from:
+
+  http://xml.fiforms.org/xs3p/
+
+See the README_ORIG.txt for the original README.
+
+Added features include:
+
+ - Output of UTF-8 files
+ - Usage of Creole wiki syntax in <documentation> sections
+
