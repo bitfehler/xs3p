@@ -299,6 +299,16 @@
             </xsl:if>
          </head>
          <body>
+            <!-- Popup for displaying inline documentation -->
+            <div id="docPopupShade"/>
+            <div id="docPopup">
+              <div id="docPopupCloseBtn"><a href="javascript:void(0);" onclick="hideDocumentation()">x</a></div>
+              <h3><span id="docPopupTitleDesc">Desc</span>: <span class="name" id="docPopupTitleName">Name</span></h3>
+              <span id="docPopupText">Popup text</span>
+            </div>
+            <!-- Hidden documentation snippets for display in the popup -->
+            <xsl:apply-templates select="." mode="hiddendoc"/>
+
             <!-- Title -->
             <h1><a name="top"><xsl:value-of select="$actualTitle"/></a></h1>
 
@@ -965,7 +975,7 @@ function displayMode(isPrinterVersion) {
 }
 
 /**
- * Opens up a window displaying the documentation
+ * Opens up a popup displaying the documentation
  * of a schema component in the XML Instance
  * Representation table.
  *
@@ -974,41 +984,28 @@ function displayMode(isPrinterVersion) {
  * @param docTextArray Array containing the paragraphs
  *                           of the new document
  */
-function viewDocumentation(compDesc, compName, docTextArray) {
-  var width = 400;
-  var height = 200;
-  var locX = 100;
-  var locY = 200;
+function viewDocumentation(compDesc, compName, docArray) {
+  var content = '';
+  for (i = 0; i &lt; docArray.length; ++i) {
+    var block = document.getElementById("hdoc_" + docArray[i]);
+    content += block.childNodes[0].nodeValue + "\n\n";
+  }
+  var docText = document.getElementById("docPopupText");
+  docText.innerHTML = '';
+  creole.parse(docText, content);
+  document.getElementById("docPopupTitleDesc").innerHTML = compDesc;
+  document.getElementById("docPopupTitleName").innerHTML = compName;
+  document.getElementById("docPopupShade").style.display = 'block';
+  document.getElementById("docPopup").style.display = 'block';
+}
 
-  /* Generate content */
-  var actualText = "&lt;html>";
-  actualText += "&lt;head>&lt;title>";
-  actualText += compDesc;
-  if (compName != '') {
-     actualText += ": " + compName;
-  }
-  actualText += "&lt;/title>&lt;/head>";
-  actualText += "&lt;body bgcolor=\"#FFFFEE\">";
-  // Title
-  actualText += "&lt;p style=\"font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; letter-spacing:1px;\">";
-  actualText += compDesc;
-  if (compName != '') {
-     actualText += ": &lt;span style=\"color:#006699\">" + compName + "&lt;/span>";
-  }
-  actualText += "&lt;/p>";
-  // Documentation
-  var idx;
-  for (idx = 0; idx &lt; docTextArray.length; idx++) {
-     actualText += "&lt;p style=\"font-family: Arial, sans-serif; font-size: 10pt;\">" + docTextArray[idx] + "&lt;/p>";
-  }
-  // Link to close window
-  actualText += "&lt;a href=\"javascript:void(0)\" onclick=\"window.close();\" style=\"font-family: Arial, sans-serif; font-size: 8pt;\">Close&lt;/a>";
-  actualText += "&lt;/body>&lt;/html>";
-
-  /* Display window */
-  windowCount++;
-  var docWindow = window.open("", "documentation"+windowCount, "toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable,alwaysRaised,dependent,titlebar=no,width="+width+",height="+height+",screenX="+locX+",left="+locX+",screenY="+locY+",top="+locY);
-  docWindow.document.write(actualText);
+/**
+ * Hide the documentation popup.
+ *
+ */
+function hideDocumentation() {
+  document.getElementById("docPopupShade").style.display = 'none';
+  document.getElementById("docPopup").style.display = 'none';
 }
 </xsl:text>
       <xsl:if test="$externalJSCreoleURL = ''">
@@ -1448,6 +1445,40 @@ table.properties th, table.properties th a {
 table.properties td {
    background-color: #eee; /* Gray */
 }
+/* Documentation popup */
+#docPopupShade {
+   left: 0px;
+   right: 0px;
+   top: 0px;
+   bottom: 0px;
+   position: fixed;
+   opacity: 0.5;
+   background-color: black;
+   display: none;
+}
+#docPopup {
+   width: 400px;
+   height: 400px;
+   position: fixed;
+   top: 50%;
+   left: 50%;
+   opacity: 1;
+   margin: -200px 0 0 -200px;
+   padding: 10px;
+   background-color: white;
+   border: 1px solid black;
+   display: none;
+}
+#docPopupCloseBtn {
+   position: absolute;
+   top: 0px;
+   right: 4px;
+}
+#docPopupCloseBtn a {
+   text-decoration: none;
+   color: black;
+   font-family: monospace;
+}
 
 
 /******** Table of Contents Section ********/
@@ -1629,6 +1660,11 @@ span.targetNS {
 
 /* Name of schema component */
 .name {
+}
+
+/* Hidden documentation */
+.hidden {
+   display: none;
 }
 
 /* Hierarchy table */
@@ -3321,6 +3357,26 @@ div#legend div.hint {
    <xsl:template match="*" mode="properties"/>
 
    <!--
+     Emtpy template to avoid unwanted output in 'hiddendoc' mode
+     -->
+   <xsl:template match="text()" mode="hiddendoc"/>
+
+   <!--
+     Print hidden documentation blocks for each documented element.
+     -->
+   <xsl:template match="*" mode="hiddendoc">
+      <xsl:if test="./xsd:annotation/xsd:documentation">
+         <xsl:for-each select="./xsd:annotation/xsd:documentation">
+            <xsl:if test="position()!=1"><br/><br/></xsl:if>
+            <div class="annotation documentation hidden" id="hdoc_{generate-id(.)}">
+               <xsl:apply-templates select="."/>
+            </div>
+         </xsl:for-each>
+      </xsl:if>
+      <xsl:apply-templates select="child::node()" mode="hiddendoc"/>
+   </xsl:template>
+
+   <!--
      Displays 'annotation' elements of an component as main documentation.
         Param(s):
             component (Node) required
@@ -3333,11 +3389,12 @@ div#legend div.hint {
          <xsl:for-each select="$component/xsd:annotation/xsd:documentation">
             <xsl:if test="position()!=1"><br/><br/></xsl:if>
             <div class="annotation documentation" id="wdoc_{generate-id(.)}">
-               <xsl:apply-templates select="." mode="properties"/>
+               <xsl:text>Javascript required.</xsl:text>
             </div>
             <script type="text/javascript">
                var block = document.getElementById("wdoc_<xsl:value-of select="generate-id(.)"/>");
-               var content = block.childNodes[0].nodeValue;
+               var hblock = document.getElementById("hdoc_<xsl:value-of select="generate-id(.)"/>");
+               var content = hblock.childNodes[0].nodeValue;
                block.innerHTML = '';
                creole.parse(block, content);
             </script>
@@ -4694,36 +4751,11 @@ div#legend div.hint {
       <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true' and $component and $component/xsd:annotation/xsd:documentation">
          <xsl:variable name="documentation">
             <xsl:for-each select="$component/xsd:annotation/xsd:documentation">
-               <!-- Check for two dashes, which will break the JavaScript
-                    code -->
-               <xsl:if test="contains(., '--') or contains(@source, '--')">
-                  <xsl:call-template name="HandleError">
-                     <xsl:with-param name="isTerminating">true</xsl:with-param>
-                     <xsl:with-param name="errorMsg">
-A local schema component contains two dashes in
-'documentation' elements within its 'annotation' element.
-                     </xsl:with-param>
-                  </xsl:call-template>
-               </xsl:if>
-
                <xsl:if test="position()!=1">
                   <xsl:text>,</xsl:text>
                </xsl:if>
                <xsl:text>'</xsl:text>
-               <xsl:choose>
-                  <xsl:when test="@source">
-                     <xsl:text>More information at: </xsl:text>
-                     <xsl:call-template name="EscapeQuotes">
-                        <xsl:with-param name="value" select="@source"/>
-                     </xsl:call-template>
-                     <xsl:text>.</xsl:text>
-                  </xsl:when>
-                  <xsl:when test="normalize-space(.)!=''">
-                     <xsl:call-template name="EscapeQuotes">
-                        <xsl:with-param name="value" select="normalize-space(.)"/>
-                     </xsl:call-template>
-                  </xsl:when>
-               </xsl:choose>
+               <xsl:value-of select="generate-id(.)"/>
                <xsl:text>'</xsl:text>
             </xsl:for-each>
          </xsl:variable>

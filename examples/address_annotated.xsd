@@ -37,7 +37,17 @@
    </documentation>
   </annotation>
   <sequence>
-   <element name="name"   type="string"/>
+   <element name="name"   type="string">
+    <annotation>
+     <documentation>
+      This should be the full name of the addressee, including, if appropriate:
+
+       * Academic titles
+       * Titles of nobility
+       * maybe more...
+     </documentation>
+    </annotation>
+   </element>
    <element name="street" type="string"/>
    <element name="city"   type="string"/>
   </sequence>
