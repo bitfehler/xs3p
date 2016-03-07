@@ -1,5 +1,4 @@
-xs3p XSD documentation generator
-================================
+# xs3p XSD documentation generator
 
 This is a fork of version 1.1.5 of the xs3p doc tool from:
 
