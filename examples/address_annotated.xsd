@@ -10,10 +10,10 @@
    This version of the schema has enhanced documentation to
    demonstrate the new capabilities of the xs3p doc tool:
 
-    * Display of {{{&lt;annotation&gt;}}} info with //Creole// wiki markup
-    * Output of UTF-8
+    * Display of `&lt;annotation&gt;` info with _markdown_ support
+    * UTF-8 output
 
-   The //Creole// wiki markup is documented in the [[http://www.wikicreole.org/|WikiCreole website]].
+   The _markdown_ syntax is documented on the [Markdown homepage](https://daringfireball.net/projects/markdown/ "Markdown homepage").
   </documentation>
  </annotation>
 
@@ -24,16 +24,18 @@
 
     This type could be used for addresses that don't have distinct type,
     but then it would have poor validation. Just to demonstrate UTF-8 and
-    a creole markup {{{&lt;pre&gt;}}} block, here is an example german 
-    address:
+    a markdown `&lt;pre&gt;` block, here is an example german address:
 
-{{{
-&lt;name&gt;Conrad Hoffmann&lt;/name&gt;
-&lt;street&gt;Beispielstraße 23&lt;/street&gt;
-&lt;city&gt;D-12345 Berlin&lt;/city&gt;
-}}}
+
+        &lt;name&gt;Conrad Hoffmann&lt;/name&gt;
+        &lt;street&gt;Beispielstraße 23&lt;/street&gt;
+        &lt;city&gt;D-12345 Berlin&lt;/city&gt;
 
     **Note:** Whenever possible, a distinct subtype should be specified.
+
+    Also, note how you can click the _i_ next to the `name` element in the
+    _XML Instance Representation_ below to see the documentation for this
+    element.
    </documentation>
   </annotation>
   <sequence>
@@ -58,7 +60,7 @@
    <documentation>
     Address subtype for United States addresses.
 
-    The state comes from a list [[#type_USState|below]].
+    The state comes from a list defined [below](#type_USState "Definition of type USState").
    </documentation>
   </annotation>
   <complexContent>
@@ -76,16 +78,12 @@
  <simpleType name="USState">
   <annotation>
    <documentation>
-    If this list was complete, it would have the following states:
+     The list of states of the USA.
 
-|=Code |=State |
-| AL | Alabama |
-| AK | Alaska |
-| AZ | Arizona |
-| AR | Arkansas |
-| CA | California |
-
-    ...and so on. A nice way to use tables in the documentation!
+     Standard markdown does not support tables, which would have been
+     a nice way to present those. Testing integration with other
+     markdown processors, like [snuownd](https://github.com/gamefreak/snuownd "snuownd Github page")
+     might be worth a try in the future.
    </documentation>
   </annotation>
   <restriction base="string">

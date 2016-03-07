@@ -96,11 +96,8 @@
 
    <xsl:output
     method="xml"
-    encoding="UTF-8"
-    standalone="yes"
-    version="1.0"
-    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
-    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+    omit-xml-declaration="yes"
+    doctype-system="about:legacy-compat"
     indent="yes"/>
 
    <xsl:key name="type" match="/xsd:schema/xsd:complexType | /xsd:schema/xsd:simpleType | /xsd:schema/xsd:redefine/xsd:complexType | /xsd:schema/xsd:redefine/xsd:simpleType" use="@name" />
@@ -113,19 +110,13 @@
 
    <!-- ******** Global Parameters ******** -->
 
-   <!-- Title of XHTML document. -->
+   <!-- Title of HTML document. -->
    <xsl:param name="title"></xsl:param>
 
    <!-- If 'true', sorts the top-level schema components by type,
         then name. Otherwise, displays the components by the order that
         they appear in the schema. -->
    <xsl:param name="sortByComponent">true</xsl:param>
-
-   <!-- If 'true', XHTML document uses JavaScript for added
-        functionality, such as pop-up windows and information-
-        hiding.
-        Otherwise, XHTML document does not use JavaScript. -->
-   <xsl:param name="useJavaScript">true</xsl:param>
 
    <!-- If 'true', prints all super-types in the
         type hierarchy box.
@@ -141,9 +132,6 @@
 
    <!-- If 'true', prints out the Glossary section. -->
    <xsl:param name="printGlossary">true</xsl:param>
-
-   <!-- If 'true', prints out the Legend section. -->
-   <xsl:param name="printLegend">true</xsl:param>
 
    <!-- If 'true', prints prefix matching namespace of schema
         components in XML Instance Representation tables. -->
@@ -166,13 +154,17 @@
    <xsl:param name="baseURL"></xsl:param>
 
    <!-- Uses an external CSS stylesheet rather than using
-        internally-declared CSS properties. -->
+        internally-declared CSS properties. This refers to xs3p
+        specific CSS, not the Bootstrap CSS. -->
    <xsl:param name="externalCSSURL"></xsl:param>
 
-   <!-- Uses an external JavaScript file for the Creole
-        syntax parse rather than using the inline code. -->
-   <xsl:param name="externalJSCreoleURL"></xsl:param>
+   <!-- Link to JQuery. -->
+   <xsl:param name="jQueryURL">//code.jquery.com/jquery-2.2.1.min.js</xsl:param>
 
+   <!-- Link base to Bootstrap CSS and JS. The files
+        <bootstrapURL>/css/bootstrap.min.css and
+        <bootstrapURL>/js/bootstrap.min.js must exist.-->
+   <xsl:param name="bootstrapURL">//netdna.bootstrapcdn.com/bootstrap/3.3.6</xsl:param>
 
    <!-- ******** Constants ******** -->
 
@@ -182,13 +174,13 @@
    <!-- XML Namespace -->
    <xsl:variable name="XML_NS">http://www.w3.org/XML/1998/namespace</xsl:variable>
 
-   <!-- Number of 'em' to indent from parent element's start tag to
+   <!-- Number of spaces to indent from parent element's start tag to
         child element's start tag -->
-   <xsl:variable name="ELEM_INDENT">1.5</xsl:variable>
+   <xsl:variable name="ELEM_INDENT">3</xsl:variable>
 
-   <!-- Number of 'em' to indent from parent element's start tag to
+   <!-- Number of spaces to indent from parent element's start tag to
         attribute's tag -->
-   <xsl:variable name="ATTR_INDENT">0.5</xsl:variable>
+   <xsl:variable name="ATTR_INDENT">1</xsl:variable>
 
    <!-- Title to use if none provided -->
    <xsl:variable name="DEFAULT_TITLE">XML Schema Documentation</xsl:variable>
@@ -222,6 +214,29 @@
         relative to the original schema. See 'PrintCompRef'
         template. -->
    <xsl:variable name="ORIGINAL_SCHEMA" select="/xsd:schema"/>
+
+   <!-- Help texts used throughout the document. -->
+      <!-- Hierarchy table -->
+   <xsl:variable name="HELP_HIERARCHY">This table shows the schema components type hierarchy.</xsl:variable>
+      <!-- Properties table -->
+   <xsl:variable name="HELP_PROPERTIES">This table displays the properties of the schema component.</xsl:variable>
+      <!-- Documentation panel -->
+   <xsl:variable name="HELP_DOCUMENTATION">This panel contains the schema components documentation.</xsl:variable>
+      <!-- Instance table -->
+   <xsl:variable name="HELP_INSTANCE">
+      <xsl:text>The XML Instance Representation table shows the schema component's content as an XML instance.
+         &lt;ul&gt;
+         &lt;li&gt;The minimum and maximum occurrence of elements and attributes are provided in square brackets, e.g. [0..1].&lt;/li&gt;
+         &lt;li&gt;Model group information are shown in gray, e.g. Start Choice ... End Choice.&lt;/li&gt;
+         &lt;li&gt;For type derivations, the elements and attributes that have been added to or changed from the base type's content are shown in &lt;strong&gt;bold&lt;/strong&gt;&lt;/li&gt;
+         &lt;li&gt;If an element/attribute has a fixed value, the fixed value is shown in green.&lt;/li&gt;
+         &lt;li&gt;More stuff&lt;/li&gt;
+         &lt;li&gt;If a local element/attribute has documentation, it will be displayed in a window that pops up when the question mark inside the attribute or next to the element is clicked.&lt;/li&gt;
+         &lt;/ul&gt;
+      </xsl:text>
+   </xsl:variable>
+      <!-- Representation table -->
+   <xsl:variable name="HELP_REPRESENTATION">The Schema Component Representation table above displays the underlying XML representation of the schema component. (Annotations are not shown.)</xsl:variable>
 
    <!-- ******** Main Document ******** -->
 
@@ -259,7 +274,7 @@
             <title><xsl:value-of select="$actualTitle"/></title>
 
             <!-- Set content type -->
-            <meta http-equiv="Content-Type" content="text/xml; charset=utf-8"/>
+            <meta charset="UTF-8"/>
 
             <!-- Set base URL to use in working out relative paths -->
             <xsl:if test="$baseURL != ''">
@@ -268,10 +283,8 @@
                </xsl:element>
             </xsl:if>
 
-            <!-- Use external JavaScript file for Creole syntax parser -->
-            <xsl:if test="$externalJSCreoleURL != ''">
-               <script src="{$externalJSCreoleURL}" type="text/javascript"/>
-            </xsl:if>
+            <!-- CSS included here, JS at end of body. -->
+            <link href="{$bootstrapURL}/css/bootstrap.min.css" rel="stylesheet"/>
 
             <!-- Set CSS styles -->
             <style type="text/css">
@@ -289,56 +302,63 @@
                </xsl:choose>
             </style>
 
-            <!-- Add Javascript code to make the collapseable boxes work -->
-            <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true'">
-               <xsl:call-template name="PrintJSCode">
-                  <xsl:with-param name="code">
-                     <xsl:call-template name="DocumentJSCode"/>
-                  </xsl:with-param>
-               </xsl:call-template>
-            </xsl:if>
+            <script src="//pagedown.googlecode.com/hg/Markdown.Converter.js">
+              // Import Markdown converter for comments processing
+            </script>
+
          </head>
-         <body>
-            <!-- Popup for displaying inline documentation -->
-            <div id="docPopupShade"/>
-            <div id="docPopup">
-              <div id="docPopupCloseBtn"><a href="javascript:void(0);" onclick="hideDocumentation()">x</a></div>
-              <h3><span id="docPopupTitleDesc">Desc</span>: <span class="name" id="docPopupTitleName">Name</span></h3>
-              <span id="docPopupText">Popup text</span>
+         <body data-spy="scroll" data-target=".xs3p-sidebar" data-offset="65">
+
+            <div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+               <div class="container">
+                  <div class="navbar-header">
+                      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                         <span class="sr-only">Toggle navigation</span>
+                         <span class="icon-bar"><xsl:text> </xsl:text></span>
+                         <span class="icon-bar"><xsl:text> </xsl:text></span>
+                         <span class="icon-bar"><xsl:text> </xsl:text></span>
+                      </button>
+                      <a class="navbar-brand xs3p-navbar-title"><xsl:value-of select="$actualTitle"/></a>
+                  </div>
+               </div>
             </div>
-            <!-- Hidden documentation snippets for display in the popup -->
-            <xsl:apply-templates select="." mode="hiddendoc"/>
+            <div class="container-fluid">
+               <div class="row">
+                  <div class="col-md-3" id="menu-cols">
+                     <div class="xs3p-sidebar hidden-print" role="complementary">
+                        <xsl:apply-templates select="." mode="toc"/>
+                     </div>
+                  </div>
+                 <div class="col-md-9 content" role="main" id="xs3p-content">
 
-            <!-- Title -->
-            <h1><a name="top"><xsl:value-of select="$actualTitle"/></a></h1>
+<!-- Note: some indentation resets in order to keep a minimum diff readability. -->
 
-            <!-- Buttons for displaying printer-friendly version, and
-                 expanding and collapsing all boxes -->
-            <xsl:call-template name="GlobalControlButtons"/>
+         <!-- Hidden documentation snippets for display in the popup -->
+         <xsl:apply-templates select="." mode="hiddendoc"/>
 
-            <!-- Section: Table of Contents -->
-            <h2>Table of Contents</h2>
-            <xsl:apply-templates select="." mode="toc"/>
-            <xsl:call-template name="SectionFooter"/>
+         <!-- Title -->
+         <h1><a id="top"><xsl:value-of select="$actualTitle"/></a></h1>
 
-            <!-- Section: Schema Document Properties -->
-            <h2><a name="SchemaProperties">Schema Document Properties</a></h2>
+         <!-- Section: Schema Document Properties -->
+         <section id="SectionSchemaProperties">
+            <h2><a id="SchemaProperties">Schema Document Properties</a></h2>
             <!-- Sub-section: Properties table -->
             <xsl:apply-templates select="." mode="properties"/>
             <!-- Sub-section: Namespace Legend -->
-            <h3>Declared Namespaces</h3>
+            <!--<h3>Declared Namespaces</h3>-->
             <xsl:apply-templates select="." mode="namespaces"/>
             <!-- Sub-section: Schema Component Representation table -->
             <xsl:call-template name="SchemaComponentTable">
                <xsl:with-param name="component" select="."/>
             </xsl:call-template>
             <xsl:call-template name="SectionFooter"/>
+         </section>
 
-            <!-- Section: Redefined Schema Components -->
-            <xsl:if test="xsd:redefine">
-               <h2><a name="Redefinitions">Redefined Schema Components</a></h2>
-               <xsl:apply-templates select="xsd:redefine/xsd:simpleType | xsd:redefine/xsd:complexType | xsd:redefine/xsd:attributeGroup | xsd:redefine/xsd:group" mode="topSection"/>
-            </xsl:if>
+         <!-- Section: Redefined Schema Components -->
+         <xsl:if test="xsd:redefine">
+            <h2><a id="Redefinitions">Redefined Schema Components</a></h2>
+            <xsl:apply-templates select="xsd:redefine/xsd:simpleType | xsd:redefine/xsd:complexType | xsd:redefine/xsd:attributeGroup | xsd:redefine/xsd:group" mode="topSection"/>
+         </xsl:if>
 
             <!-- Sections: Top-level Schema Components -->
             <xsl:choose>
@@ -346,41 +366,36 @@
                <xsl:when test="normalize-space(translate($sortByComponent,'TRUE','true'))='true'">
                   <!-- Declarations -->
                   <xsl:if test="xsd:attribute or xsd:element">
-                     <h2><a name="SchemaDeclarations">Global Declarations</a></h2>
+                     <section id="SectionSchemaDeclarations">
+                     <h2><a id="SchemaDeclarations">Global Declarations</a></h2>
                      <xsl:apply-templates select="xsd:attribute | xsd:element" mode="topSection">
                         <xsl:sort select="local-name(.)" order="ascending"/>
                         <xsl:sort select="@name" order="ascending"/>
                      </xsl:apply-templates>
+                     </section>
                   </xsl:if>
                   <!-- Definitions -->
                   <xsl:if test="xsd:attributeGroup or xsd:complexType or xsd:group or xsd:notation or xsd:simpleType">
-                     <h2><a name="SchemaDefinitions">Global Definitions</a></h2>
-                     <xsl:apply-templates select="xsd:attributeGroup | xsd:complexType | xsd:group | xsd:notation | xsd:simpleType" mode="topSection">
-                        <xsl:sort select="local-name(.)" order="ascending"/>
-                        <xsl:sort select="@name" order="ascending"/>
-                     </xsl:apply-templates>
+                     <section id="SectionSchemaDefinitions">
+                        <h2><a id="SchemaDefinitions">Global Definitions</a></h2>
+                        <xsl:apply-templates select="xsd:attributeGroup | xsd:complexType | xsd:group | xsd:notation | xsd:simpleType" mode="topSection">
+                           <xsl:sort select="local-name(.)" order="ascending"/>
+                           <xsl:sort select="@name" order="ascending"/>
+                        </xsl:apply-templates>
+                     </section>
                   </xsl:if>
                </xsl:when>
                <!-- Display schema components as they occur -->
                <xsl:otherwise>
-                  <h2><a name="SchemaComponents">Global Schema Components</a></h2>
+                  <h2><a id="SchemaComponents">Global Schema Components</a></h2>
                   <xsl:apply-templates select="xsd:attribute | xsd:attributeGroup | xsd:complexType | xsd:element | xsd:group | xsd:notation | xsd:simpleType" mode="topSection"/>
                </xsl:otherwise>
             </xsl:choose>
 
-            <!-- Section: Legend -->
-            <xsl:if test="normalize-space(translate($printLegend,'TRUE','true'))='true'">
-               <div id="legend">
-                  <h2><a name="Legend">Legend</a></h2>
-                  <xsl:call-template name="Legend"/>
-                  <xsl:call-template name="SectionFooter"/>
-               </div>
-            </xsl:if>
-
             <!-- Section: Glossary -->
             <xsl:if test="normalize-space(translate($printGlossary,'TRUE','true'))='true'">
                <div id="glossary">
-                  <h2><a name="Glossary">Glossary</a></h2>
+                  <h2><a id="Glossary">Glossary</a></h2>
                   <xsl:call-template name="Glossary"/>
                   <xsl:call-template name="SectionFooter"/>
                </div>
@@ -390,14 +405,55 @@
             <p class="footer">
                <xsl:text>Generated by </xsl:text>
                <a href="http://github.com/bitfehler/xs3p">xs3p-ch</a> (fork of <a href="http://xml.fiforms.org/xs3p/">xs3p</a>)
-               <xsl:text>.</xsl:text>
-               <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true'">
-                  <xsl:text> Last modified: </xsl:text>
-                  <xsl:call-template name="PrintJSCode">
-                     <xsl:with-param name="code">document.write(document.lastModified);</xsl:with-param>
-                  </xsl:call-template>
-               </xsl:if>
+               <xsl:text>. Last Modified: </xsl:text>
+               <xsl:call-template name="PrintJSCode">
+                  <xsl:with-param name="code">document.write(document.lastModified);</xsl:with-param>
+               </xsl:call-template>
             </p>
+
+                  </div>
+               </div>
+            </div>
+
+            <script src="{$jQueryURL}">
+              // Import JQuery, required for Bootstrap
+            </script>
+            <script src="{$bootstrapURL}/js/bootstrap.min.js">
+              // Import Bootstrap JS code
+            </script>
+            <script>
+               <xsl:text disable-output-escaping="yes">
+
+               $(function () { $("[data-toggle='tooltip']").tooltip(); });
+               $(function () { $("[data-toggle='popover']").popover(); });
+
+               var c = new Markdown.Converter();
+               $('.xs3p-doc').each(function(i, obj) {
+                  var rawDocID = '#' + $(this).attr('id') + '-raw';
+                  var indent = $(rawDocID).html().match("^\\n[\\t ]*");
+                  if (!(indent === null)) {
+                     normalized = $(rawDocID).html().replace(new RegExp(indent[0], "gm"), "\n");
+                  }
+                  $(this).html(c.makeHtml(normalized));
+                  $(this).find('code,pre').each(function(i, block) {
+                     $(this).html($(this).text());
+                  });
+               });
+
+               $(window).scroll(function() {
+                  if ($(".xs3p-sidebar").css("position") == "fixed" &amp;&amp; $(window).height() &lt; $(".xs3p-sidebar").height()) {
+                     var perc = $(window).scrollTop() / $("#xs3p-content").height();
+                     var overflow = $(".xs3p-sidebar").height() + 105 - $(window).height();
+                     $(".xs3p-sidebar").css("top", (65 - Math.round(overflow * perc)) + "px");
+                  }
+               });
+               $(window).resize(function() {
+                  if ($(".xs3p-sidebar").css("position") == "fixed") {
+                     $(".xs3p-sidebar").css("top", "65px");
+                  }
+               });
+               </xsl:text>
+            </script>
          </body>
       </html>
    </xsl:template>
@@ -407,64 +463,82 @@
      current schema.
      -->
    <xsl:template match="xsd:schema" mode="namespaces">
-      <table class="namespaces">
-         <tr>
-            <th>Prefix</th>
-            <th>Namespace</th>
-         </tr>
-         <!-- Default namespace (no prefix) -->
-         <xsl:if test="namespace::*[local-name(.)='']">
-            <xsl:variable name="ns" select="namespace::*[local-name(.)='']"/>
-            <tr>
-               <td>
-                  <a name="{$NS_PREFIX}">Default namespace</a>
-               </td>
-               <td>
-                  <xsl:choose>
-                     <xsl:when test="/xsd:schema/@targetNamespace and $ns=normalize-space(/xsd:schema/@targetNamespace)">
-                        <span class="targetNS">
-                           <xsl:value-of select="$ns"/>
-                        </span>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:value-of select="$ns"/>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </td>
-            </tr>
-         </xsl:if>
-         <!-- Namespaces with prefixes -->
-         <xsl:for-each select="namespace::*[local-name(.)!='']">
-            <xsl:variable name="prefix" select="local-name(.)"/>
-            <xsl:variable name="ns" select="."/>
-            <tr>
-               <td>
-                  <a name="{concat($NS_PREFIX, $prefix)}">
-                     <xsl:value-of select="$prefix"/>
-                  </a>
-               </td>
-               <td>
-                  <xsl:choose>
-                     <xsl:when test="/xsd:schema/@targetNamespace and $ns=normalize-space(/xsd:schema/@targetNamespace)">
-                        <span class="targetNS">
-                           <xsl:value-of select="$ns"/>
-                        </span>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:value-of select="$ns"/>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </td>
-            </tr>
-         </xsl:for-each>
-      </table>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="anchor">declared-namespaces</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Declared Namespaces</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <thead>
+                  <tr>
+                     <th>Prefix</th>
+                     <th>Namespace</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <!-- Default namespace (no prefix) -->
+                  <xsl:if test="namespace::*[local-name(.)='']">
+                     <xsl:variable name="ns" select="namespace::*[local-name(.)='']"/>
+                     <tr>
+                        <td>
+                           <a id="{$NS_PREFIX}">Default namespace</a>
+                        </td>
+                        <td>
+                           <xsl:choose>
+                              <xsl:when test="/xsd:schema/@targetNamespace and $ns=normalize-space(/xsd:schema/@targetNamespace)">
+                                 <span class="targetNS">
+                                    <xsl:value-of select="$ns"/>
+                                 </span>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                 <xsl:value-of select="$ns"/>
+                              </xsl:otherwise>
+                           </xsl:choose>
+                        </td>
+                     </tr>
+                  </xsl:if>
+                  <!-- Namespaces with prefixes -->
+                  <xsl:for-each select="namespace::*[local-name(.)!='']">
+                     <xsl:variable name="prefix" select="local-name(.)"/>
+                     <xsl:variable name="ns" select="."/>
+                     <tr>
+                        <td>
+                           <a id="{concat($NS_PREFIX, $prefix)}">
+                              <xsl:value-of select="$prefix"/>
+                           </a>
+                        </td>
+                        <td>
+                           <xsl:choose>
+                              <xsl:when test="/xsd:schema/@targetNamespace and $ns=normalize-space(/xsd:schema/@targetNamespace)">
+                                 <span class="targetNS">
+                                    <xsl:value-of select="$ns"/>
+                                 </span>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                 <xsl:value-of select="$ns"/>
+                              </xsl:otherwise>
+                           </xsl:choose>
+                        </td>
+                     </tr>
+                  </xsl:for-each>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
      Prints out the Table of Contents.
      -->
    <xsl:template match="xsd:schema" mode="toc">
-      <ul>
+      <ul class="nav nav-list xs3p-sidenav">
          <!-- Section: Schema Document Properties -->
          <li>
             <a href="#SchemaProperties">Schema Document Properties</a>
@@ -483,51 +557,33 @@
             <xsl:when test="normalize-space(translate($sortByComponent,'TRUE','true'))='true'">
                <!-- Declarations -->
                <xsl:if test="xsd:attribute or xsd:element">
-                  <li><a href="#SchemaDeclarations">Global Declarations</a>
-                     <ul>
-                        <xsl:apply-templates select="xsd:attribute | xsd:element" mode="toc">
-                           <xsl:sort select="local-name(.)" order="ascending"/>
-                           <xsl:sort select="@name" order="ascending"/>
-                        </xsl:apply-templates>
-                     </ul>
-                  </li>
+                  <li><a href="#SchemaDeclarations">Global Declarations</a></li>
+                  <xsl:apply-templates select="xsd:attribute | xsd:element" mode="toc">
+                     <xsl:sort select="local-name(.)" order="ascending"/>
+                     <xsl:sort select="@name" order="ascending"/>
+                  </xsl:apply-templates>
                </xsl:if>
                <!-- Definitions -->
                <xsl:if test="xsd:attributeGroup or xsd:complexType or xsd:group or xsd:notation or xsd:simpleType">
-                  <li><a href="#SchemaDefinitions">Global Definitions</a>
-                     <ul>
-                        <xsl:apply-templates select="xsd:attributeGroup | xsd:complexType | xsd:group | xsd:notation | xsd:simpleType" mode="toc">
-                           <xsl:sort select="local-name(.)" order="ascending"/>
-                           <xsl:sort select="@name" order="ascending"/>
-                        </xsl:apply-templates>
-                     </ul>
-                  </li>
+                  <li><a href="#SchemaDefinitions">Global Definitions</a></li>
+                  <xsl:apply-templates select="xsd:attributeGroup | xsd:complexType | xsd:group | xsd:notation | xsd:simpleType" mode="toc">
+                     <xsl:sort select="local-name(.)" order="ascending"/>
+                     <xsl:sort select="@name" order="ascending"/>
+                  </xsl:apply-templates>
                </xsl:if>
             </xsl:when>
             <!-- Display schema components in order as they appear in schema -->
             <xsl:otherwise>
-               <li><a href="#SchemaComponents">Global Schema Components</a>
-                  <ul>
-                     <xsl:apply-templates select="xsd:attribute | xsd:attributeGroup | xsd:complexType | xsd:element | xsd:group | xsd:notation | xsd:simpleType" mode="toc"/>
-                  </ul>
-               </li>
+               <li><a href="#SchemaComponents">Global Schema Components</a></li>
+               <xsl:apply-templates select="xsd:attribute | xsd:attributeGroup | xsd:complexType | xsd:element | xsd:group | xsd:notation | xsd:simpleType" mode="toc"/>
             </xsl:otherwise>
          </xsl:choose>
-      </ul>
 
-      <!-- Section: Legend -->
-      <xsl:if test="normalize-space(translate($printLegend,'TRUE','true'))='true'">
-         <ul id="legendTOC" style="margin-top: 0em">
-            <li><a href="#Legend">Legend</a></li>
-         </ul>
-      </xsl:if>
-
-      <!-- Section: Glossary -->
-      <xsl:if test="normalize-space(translate($printGlossary,'TRUE','true'))='true'">
-         <ul id="glossaryTOC" style="margin-top: 0em">
+         <!-- Section: Glossary -->
+         <xsl:if test="normalize-space(translate($printGlossary,'TRUE','true'))='true'">
             <li><a href="#Glossary">Glossary</a></li>
-         </ul>
-      </xsl:if>
+         </xsl:if>
+      </ul>
    </xsl:template>
 
    <!--
@@ -541,7 +597,7 @@
          </xsl:call-template>
       </xsl:variable>
 
-      <li>
+      <li class="nav-sub-item">
          <a href="#{$componentID}">
             <xsl:call-template name="GetComponentDescription">
                <xsl:with-param name="component" select="."/>
@@ -556,7 +612,12 @@
      Prints out the section for a top-level schema component.
      -->
    <xsl:template match="xsd:*[@name]" mode="topSection">
-      <!-- Header -->
+      <xsl:variable name="componentID">
+         <xsl:call-template name="GetComponentID">
+            <xsl:with-param name="component" select="."/>
+         </xsl:call-template>
+      </xsl:variable>
+
       <xsl:call-template name="ComponentSectionHeader">
          <xsl:with-param name="component" select="."/>
       </xsl:call-template>
@@ -579,58 +640,6 @@
 
       <!-- Footer -->
       <xsl:call-template name="SectionFooter"/>
-   </xsl:template>
-
-   <!--
-     Prints out the buttons that can expand and collapse all boxes in
-     this page.
-     -->
-   <xsl:template name="GlobalControlButtons">
-      <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true'">
-         <div style="float: right;">
-            <!-- Printer-friendly Version -->
-            <div id="printerControls" style="display:none;">
-               <input type="checkbox" onclick="displayMode(this.checked)"/>
-               <xsl:text>Printer-friendly Version</xsl:text>
-            </div>
-            <xsl:call-template name="PrintJSCode">
-               <xsl:with-param name="code">
-var pc = getElementObject("printerControls");
-if (pc != null) {
-   pc.style.display="block";
-}
-               </xsl:with-param>
-            </xsl:call-template>
-
-            <!-- Expand/Collapse All buttons -->
-            <div id="globalControls" style="display:none">
-               <strong>XML Instance Representation:</strong><br/>
-               <span style="margin-left: 1em; white-space: nowrap">
-                  <xsl:text>[ </xsl:text>
-                  <a href="javascript:void(0)" onclick="expandAll(xiBoxes)">Expand All</a>
-                  <xsl:text> | </xsl:text>
-                  <a href="javascript:void(0)" onclick="collapseAll(xiBoxes)">Collapse All</a>
-                  <xsl:text> ]</xsl:text>
-               </span><br/><br/>
-               <strong>Schema Component Representation:</strong><br/>
-               <span style="margin-left: 1em; white-space: nowrap">
-                  <xsl:text>[ </xsl:text>
-                  <a href="javascript:void(0)" onclick="expandAll(scBoxes)">Expand All</a>
-                  <xsl:text> | </xsl:text>
-                  <a href="javascript:void(0)" onclick="collapseAll(scBoxes)">Collapse All</a>
-                  <xsl:text> ]</xsl:text>
-               </span>
-            </div>
-            <xsl:call-template name="PrintJSCode">
-               <xsl:with-param name="code">
-var gc = getElementObject("globalControls");
-if (gc != null) {
-   gc.style.display="block";
-}
-               </xsl:with-param>
-            </xsl:call-template>
-         </div>
-      </xsl:if>
    </xsl:template>
 
    <!--
@@ -658,7 +667,7 @@ if (gc != null) {
          </xsl:call-template>
       </xsl:variable>
 
-      <h3>
+      <h3 class="xs3p-subsection-heading">
          <!-- Description -->
          <xsl:choose>
             <xsl:when test="$componentTermRef != ''">
@@ -673,7 +682,7 @@ if (gc != null) {
          </xsl:choose>
          <xsl:text>: </xsl:text>
          <!-- Name -->
-         <a name="{$componentID}" class="name">
+         <a id="{$componentID}" class="name" data-html="true" data-placement="bottom" data-toggle="tooltip" title="Schema component name.">
             <xsl:value-of select="$component/@name"/>
          </a>
       </h3>
@@ -684,7 +693,7 @@ if (gc != null) {
      -->
    <xsl:template name="SectionFooter">
       <!-- Link to top of page-->
-      <div style="text-align: right; clear: both;"><a href="#top">top</a></div>
+      <div style="text-align: right; clear: both;"><a href="#top" title="Go to top of page"><span class="glyphicon glyphicon-chevron-up"><xsl:text> </xsl:text></span></a></div>
       <hr/>
    </xsl:template>
 
@@ -692,1298 +701,139 @@ if (gc != null) {
      Java Script code required by the entire HTML document.
      -->
    <xsl:template name="DocumentJSCode">
-      <!-- Get all IDs of XML Instance Representation boxes
-            and place them in an array. -->
-      <xsl:text>/* IDs of XML Instance Representation boxes */
-</xsl:text>
-      <xsl:text>var xiBoxes = new Array(</xsl:text>
-      <xsl:for-each select="/xsd:schema/xsd:*[@name]">
-         <xsl:if test="position()!=1">
-            <xsl:text>, </xsl:text>
-         </xsl:if>
-         <xsl:text>'</xsl:text>
-         <xsl:call-template name="GetComponentID">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
-         <xsl:text>_xibox'</xsl:text>
-      </xsl:for-each>
-      <xsl:text>);
-</xsl:text>
-      <!-- Get all IDs of Schema Component Representation boxes
-            and place them in an array. -->
-      <xsl:text>/* IDs of Schema Component Representation boxes */
-</xsl:text>
-      <xsl:text>var scBoxes = new Array('schema_scbox'</xsl:text>
-      <xsl:for-each select="/xsd:schema/xsd:*[@name]">
-         <xsl:text>, '</xsl:text>
-         <xsl:call-template name="GetComponentID">
-            <xsl:with-param name="component" select="."/>
-         </xsl:call-template>
-         <xsl:text>_scbox'</xsl:text>
-      </xsl:for-each>
-      <xsl:text>);
-</xsl:text>
-      <!-- Functions -->
-      <xsl:text>
-/**
- * Can get the ID of the button controlling
- * a collapseable box by concatenating
- * this string onto the ID of the box itself.
- */
-var B_SFIX = "_button";
-
-/**
- * Counter of documentation windows
- * Used to give each window a unique name
- */
-var windowCount = 0;
-
-/**
- * Returns an element in the current HTML document.
- *
- * @param elementID Identifier of HTML element
- * @return               HTML element object
- */
-function getElementObject(elementID) {
-    var elemObj = null;
-    if (document.getElementById) {
-        elemObj = document.getElementById(elementID);
-    }
-    return elemObj;
-}
-
-/**
- * Closes a collapseable box.
- *
- * @param boxObj       Collapseable box
- * @param buttonObj Button controlling box
- */
-function closeBox(boxObj, buttonObj) {
-  if (boxObj == null || buttonObj == null) {
-     // Box or button not found
-  } else {
-     // Change 'display' CSS property of box
-     boxObj.style.display="none";
-
-     // Change text of button
-     if (boxObj.style.display=="none") {
-        buttonObj.value=" + ";
-     }
-  }
-}
-
-/**
- * Opens a collapseable box.
- *
- * @param boxObj       Collapseable box
- * @param buttonObj Button controlling box
- */
-function openBox(boxObj, buttonObj) {
-  if (boxObj == null || buttonObj == null) {
-     // Box or button not found
-  } else {
-     // Change 'display' CSS property of box
-     boxObj.style.display="block";
-
-     // Change text of button
-     if (boxObj.style.display=="block") {
-        buttonObj.value=" - ";
-     }
-  }
-}
-
-/**
- * Sets the state of a collapseable box.
- *
- * @param boxID Identifier of box
- * @param open If true, box is "opened",
- *             Otherwise, box is "closed".
- */
-function setState(boxID, open) {
-  var boxObj = getElementObject(boxID);
-  var buttonObj = getElementObject(boxID+B_SFIX);
-  if (boxObj == null || buttonObj == null) {
-     // Box or button not found
-  } else if (open) {
-     openBox(boxObj, buttonObj);
-     // Make button visible
-     buttonObj.style.display="inline";
-  } else {
-     closeBox(boxObj, buttonObj);
-     // Make button visible
-     buttonObj.style.display="inline";
-  }
-}
-
-/**
- * Switches the state of a collapseable box, e.g.
- * if it's opened, it'll be closed, and vice versa.
- *
- * @param boxID Identifier of box
- */
-function switchState(boxID) {
-  var boxObj = getElementObject(boxID);
-  var buttonObj = getElementObject(boxID+B_SFIX);
-  if (boxObj == null || buttonObj == null) {
-     // Box or button not found
-  } else if (boxObj.style.display=="none") {
-     // Box is closed, so open it
-     openBox(boxObj, buttonObj);
-  } else if (boxObj.style.display=="block") {
-     // Box is opened, so close it
-     closeBox(boxObj, buttonObj);
-  }
-}
-
-/**
- * Closes all boxes in a given list.
- *
- * @param boxList Array of box IDs
- */
-function collapseAll(boxList) {
-  var idx;
-  for (idx = 0; idx &lt; boxList.length; idx++) {
-     var boxObj = getElementObject(boxList[idx]);
-     var buttonObj = getElementObject(boxList[idx]+B_SFIX);
-     closeBox(boxObj, buttonObj);
-  }
-}
-
-/**
- * Open all boxes in a given list.
- *
- * @param boxList Array of box IDs
- */
-function expandAll(boxList) {
-  var idx;
-  for (idx = 0; idx &lt; boxList.length; idx++) {
-     var boxObj = getElementObject(boxList[idx]);
-     var buttonObj = getElementObject(boxList[idx]+B_SFIX);
-     openBox(boxObj, buttonObj);
-  }
-}
-
-/**
- * Makes all the control buttons of boxes appear.
- *
- * @param boxList Array of box IDs
- */
-function viewControlButtons(boxList) {
-    var idx;
-    for (idx = 0; idx &lt; boxList.length; idx++) {
-        buttonObj = getElementObject(boxList[idx]+B_SFIX);
-        if (buttonObj != null) {
-            buttonObj.style.display = "inline";
-        }
-    }
-}
-
-/**
- * Makes all the control buttons of boxes disappear.
- *
- * @param boxList Array of box IDs
- */
-function hideControlButtons(boxList) {
-    var idx;
-    for (idx = 0; idx &lt; boxList.length; idx++) {
-        buttonObj = getElementObject(boxList[idx]+B_SFIX);
-        if (buttonObj != null) {
-            buttonObj.style.display = "none";
-        }
-    }
-}
-
-/**
- * Sets the page for either printing mode
- * or viewing mode. In printing mode, the page
- * is made to be more readable when printing it out.
- * In viewing mode, the page is more browsable.
- *
- * @param isPrinterVersion If true, display in
- *                                 printing mode; otherwise,
- *                                 in viewing mode
- */
-function displayMode(isPrinterVersion) {
-    var obj;
-    if (isPrinterVersion) {
-        // Hide global control buttons
-        obj = getElementObject("globalControls");
-        if (obj != null) {
-            obj.style.visibility = "hidden";
-        }
-        // Hide Legend
-        obj = getElementObject("legend");
-        if (obj != null) {
-            obj.style.display = "none";
-        }
-        obj = getElementObject("legendTOC");
-        if (obj != null) {
-            obj.style.display = "none";
-        }
-        // Hide Glossary
-        obj = getElementObject("glossary");
-        if (obj != null) {
-            obj.style.display = "none";
-        }
-        obj = getElementObject("glossaryTOC");
-        if (obj != null) {
-            obj.style.display = "none";
-        }
-
-        // Expand all XML Instance Representation tables
-        expandAll(xiBoxes);
-        // Expand all Schema Component Representation tables
-        expandAll(scBoxes);
-
-        // Hide Control buttons
-        hideControlButtons(xiBoxes);
-        hideControlButtons(scBoxes);
-    } else {
-        // View global control buttons
-        obj = getElementObject("globalControls");
-        if (obj != null) {
-            obj.style.visibility = "visible";
-        }
-        // View Legend
-        obj = getElementObject("legend");
-        if (obj != null) {
-            obj.style.display = "block";
-        }
-        obj = getElementObject("legendTOC");
-        if (obj != null) {
-            obj.style.display = "block";
-        }
-        // View Glossary
-        obj = getElementObject("glossary");
-        if (obj != null) {
-            obj.style.display = "block";
-        }
-        obj = getElementObject("glossaryTOC");
-        if (obj != null) {
-            obj.style.display = "block";
-        }
-
-        // Expand all XML Instance Representation tables
-        expandAll(xiBoxes);
-        // Collapse all Schema Component Representation tables
-        collapseAll(scBoxes);
-
-        // View Control buttons
-        viewControlButtons(xiBoxes);
-        viewControlButtons(scBoxes);
-    }
-}
-
-/**
- * Opens up a popup displaying the documentation
- * of a schema component in the XML Instance
- * Representation table.
- *
- * @param compDesc      Description of schema component
- * @param compName      Name of schema component
- * @param docTextArray Array containing the paragraphs
- *                           of the new document
- */
-function viewDocumentation(compDesc, compName, docArray) {
-  var content = '';
-  for (i = 0; i &lt; docArray.length; ++i) {
-    var block = document.getElementById("hdoc_" + docArray[i]);
-    content += block.childNodes[0].nodeValue + "\n\n";
-  }
-  var docText = document.getElementById("docPopupText");
-  docText.innerHTML = '';
-  creole.parse(docText, content);
-  document.getElementById("docPopupTitleDesc").innerHTML = compDesc;
-  document.getElementById("docPopupTitleName").innerHTML = compName;
-  document.getElementById("docPopupShade").style.display = 'block';
-  document.getElementById("docPopup").style.display = 'block';
-}
-
-/**
- * Hide the documentation popup.
- *
- */
-function hideDocumentation() {
-  document.getElementById("docPopupShade").style.display = 'none';
-  document.getElementById("docPopup").style.display = 'none';
-}
-</xsl:text>
-      <xsl:if test="$externalJSCreoleURL = ''">
-         <xsl:text>
-/*
- * JavaScript Creole 1.0 Wiki Markup Parser
- * $Id: creole.js 14 2009-03-21 16:15:08Z ifomichev $
- *
- * Copyright (c) 2009 Ivan Fomichev
- *
- * Portions Copyright (c) 2007 Chris Purcell
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
-
-if (!Parse) { var Parse = {}; }
-if (!Parse.Simple) { Parse.Simple = {}; }
-
-Parse.Simple.Base = function(grammar, options) {
-    if (!arguments.length) { return; }
-
-    this.grammar = grammar;
-    this.grammar.root = new this.ruleConstructor(this.grammar.root);
-    this.options = options;
-};
-
-Parse.Simple.Base.prototype = {
-    ruleConstructor: null,
-    grammar: null,
-    options: null,
-
-    parse: function(node, data, options) {
-        if (options) {
-            for (i in this.options) {
-                if (typeof options[i] == 'undefined') { options[i] = this.options[i]; }
-            }
-        }
-        else {
-            options = this.options;
-        }
-        data = data.replace(/\r\n?/g, '\n');
-        this.grammar.root.apply(node, data, options);
-        if (options &amp;&amp; options.forIE) { node.innerHTML = node.innerHTML.replace(/\r?\n/g, '\r\n'); }
-    }
-};
-
-Parse.Simple.Base.prototype.constructor = Parse.Simple.Base;
-
-Parse.Simple.Base.Rule = function(params) {
-    if (!arguments.length) { return; }
-
-    for (var p in params) { this[p] = params[p]; }
-    if (!this.children) { this.children = []; }
-};
-
-Parse.Simple.Base.prototype.ruleConstructor = Parse.Simple.Base.Rule;
-
-Parse.Simple.Base.Rule.prototype = {
-    regex: null,
-    capture: null,
-    replaceRegex: null,
-    replaceString: null,
-    tag: null,
-    attrs: null,
-    children: null,
-
-    match: function(data, options) {
-        return data.match(this.regex);
-    },
-
-    build: function(node, r, options) {
-        var data;
-        if (this.capture !== null) {
-            data = r[this.capture];
-        }
-
-        var target;
-        if (this.tag) {
-            target = document.createElement(this.tag);
-            node.appendChild(target);
-        }
-        else { target = node; }
-
-        if (data) {
-            if (this.replaceRegex) {
-                data = data.replace(this.replaceRegex, this.replaceString);
-            }
-            this.apply(target, data, options);
-        }
-
-        if (this.attrs) {
-            for (var i in this.attrs) {
-                target.setAttribute(i, this.attrs[i]);
-                if (options &amp;&amp; options.forIE &amp;&amp; i == 'class') { target.className = this.attrs[i]; }
-            }
-        }
-        return this;
-    },
-
-    apply: function(node, data, options) {
-        var tail = '' + data;
-        var matches = [];
-
-        if (!this.fallback.apply) {
-            this.fallback = new this.constructor(this.fallback);
-        }
-
-        while (true) {
-            var best = false;
-            var rule  = false;
-            for (var i = 0; i &lt; this.children.length; i++) {
-                if (typeof matches[i] == 'undefined') {
-                    if (!this.children[i].match) {
-                        this.children[i] = new this.constructor(this.children[i]);
-                    }
-                    matches[i] = this.children[i].match(tail, options);
-                }
-                if (matches[i] &amp;&amp; (!best || best.index > matches[i].index)) {
-                    best = matches[i];
-                    rule = this.children[i];
-                    if (best.index == 0) { break; }
-                }
-            }
-
-            var pos = best ? best.index : tail.length;
-            if (pos > 0) {
-                this.fallback.apply(node, tail.substring(0, pos), options);
-            }
-
-            if (!best) { break; }
-
-            if (!rule.build) { rule = new this.constructor(rule); }
-            rule.build(node, best, options);
-
-            var chopped = best.index + best[0].length;
-            tail = tail.substring(chopped);
-            for (var i = 0; i &lt; this.children.length; i++) {
-                if (matches[i]) {
-                    if (matches[i].index >= chopped) {
-                        matches[i].index -= chopped;
-                    }
-                    else {
-                        matches[i] = void 0;
-                    }
-                }
-            }
-        }
-
-        return this;
-    },
-
-    fallback: {
-        apply: function(node, data, options) {
-            if (options &amp;&amp; options.forIE) {
-                // workaround for bad IE
-                data = data.replace(/\n/g, ' \r');
-            }
-            node.appendChild(document.createTextNode(data));
-        }
-    }
-};
-
-Parse.Simple.Base.Rule.prototype.constructor = Parse.Simple.Base.Rule;
-
-Parse.Simple.Creole = function(options) {
-    var rx = {};
-    rx.link = '[^\\]|~\\n]*(?:(?:\\](?!\\])|~.)[^\\]|~\\n]*)*';
-    rx.linkText = '[^\\]~\\n]*(?:(?:\\](?!\\])|~.)[^\\]~\\n]*)*';
-    rx.uriPrefix = '\\b(?:(?:https?|ftp)://|mailto:)';
-    rx.uri = rx.uriPrefix + rx.link;
-    rx.rawUri = rx.uriPrefix + '\\S*[^\\s!"\',.:;?]';
-    rx.interwikiPrefix = '[\\w.]+:';
-    rx.interwikiLink = rx.interwikiPrefix + rx.link;
-    rx.img = '\\{\\{((?!\\{)[^|}\\n]*(?:}(?!})[^|}\\n]*)*)' +
-             (options &amp;&amp; options.strict ? '' : '(?:') +
-             '\\|([^}~\\n]*((}(?!})|~.)[^}~\\n]*)*)' +
-             (options &amp;&amp; options.strict ? '' : ')?') +
-             '}}';
-
-    var formatLink = function(link, format) {
-        if (format instanceof Function) {
-            return format(link);
-        }
-
-        format = format instanceof Array ? format : [ format ];
-        if (typeof format[1] == 'undefined') { format[1] = ''; }
-        return format[0] + link + format[1];
-    };
-
-    var g = {
-        hr: { tag: 'hr', regex: /(^|\n)\s*----\s*(\n|$)/ },
-
-        br: { tag: 'br', regex: /\\\\/ },
-
-        preBlock: { tag: 'pre', capture: 2,
-            regex: /(^|\n)\{\{\{\n((.*\n)*?)\}\}\}(\n|$)/,
-            replaceRegex: /^ ([ \t]*\}\}\})/gm,
-            replaceString: '$1' },
-        tt: { tag: 'tt',
-            regex: /\{\{\{(.*?\}\}\}+)/, capture: 1,
-            replaceRegex: /\}\}\}$/, replaceString: '' },
-
-        ulist: { tag: 'ul', capture: 0,
-            regex: /(^|\n)([ \t]*\*[^*#].*(\n|$)([ \t]*[^\s*#].*(\n|$))*([ \t]*[*#]{2}.*(\n|$))*)+/ },
-        olist: { tag: 'ol', capture: 0,
-            regex: /(^|\n)([ \t]*#[^*#].*(\n|$)([ \t]*[^\s*#].*(\n|$))*([ \t]*[*#]{2}.*(\n|$))*)+/ },
-        li: { tag: 'li', capture: 0,
-            regex: /[ \t]*([*#]).+(\n[ \t]*[^*#\s].*)*(\n[ \t]*\1[*#].+)*/,
-            replaceRegex: /(^|\n)[ \t]*[*#]/g, replaceString: '$1' },
-
-        table: { tag: 'table', capture: 0,
-            regex: /(^|\n)(\|.*?[ \t]*(\n|$))+/ },
-        tr: { tag: 'tr', capture: 2, regex: /(^|\n)(\|.*?)\|?[ \t]*(\n|$)/ },
-        th: { tag: 'th', regex: /\|+=([^|]*)/, capture: 1 },
-        td: { tag: 'td', capture: 1,
-            regex: '\\|+([^|~\\[{]*((~(.|(?=\\n)|$)|' +
-                   '\\[\\[' + rx.link + '(\\|' + rx.linkText + ')?\\]\\]' +
-                   (options &amp;&amp; options.strict ? '' : '|' + rx.img) +
-                   '|[\\[{])[^|~]*)*)' },
-
-        singleLine: { regex: /.+/, capture: 0 },
-        paragraph: { tag: 'p', capture: 0,
-            regex: /(^|\n)([ \t]*\S.*(\n|$))+/ },
-        text: { capture: 0, regex: /(^|\n)([ \t]*[^\s].*(\n|$))+/ },
-
-        strong: { tag: 'strong', capture: 1,
-            regex: /\*\*([^*~]*((\*(?!\*)|~(.|(?=\n)|$))[^*~]*)*)(\*\*|\n|$)/ },
-        em: { tag: 'em', capture: 1,
-            regex: '\\/\\/(((?!' + rx.uriPrefix + ')[^\\/~])*' +
-                   '((' + rx.rawUri + '|\\/(?!\\/)|~(.|(?=\\n)|$))' +
-                   '((?!' + rx.uriPrefix + ')[^\\/~])*)*)(\\/\\/|\\n|$)' },
-
-        img: { regex: rx.img,
-            build: function(node, r, options) {
-                var img = document.createElement('img');
-                img.src = r[1];
-                img.alt = r[2] === undefined
-                    ? (options &amp;&amp; options.defaultImageText ? options.defaultImageText : '')
-                    : r[2].replace(/~(.)/g, '$1');
-                node.appendChild(img);
-            } },
-
-        namedUri: { regex: '\\[\\[(' + rx.uri + ')\\|(' + rx.linkText + ')\\]\\]',
-            build: function(node, r, options) {
-                var link = document.createElement('a');
-                link.href = r[1];
-                if (options &amp;&amp; options.isPlainUri) {
-                    link.appendChild(document.createTextNode(r[2]));
-                }
-                else {
-                    this.apply(link, r[2], options);
-                }
-                node.appendChild(link);
-            } },
-
-        namedLink: { regex: '\\[\\[(' + rx.link + ')\\|(' + rx.linkText + ')\\]\\]',
-            build: function(node, r, options) {
-                var link = document.createElement('a');
-
-                link.href = options &amp;&amp; options.linkFormat
-                    ? formatLink(r[1].replace(/~(.)/g, '$1'), options.linkFormat)
-                    : r[1].replace(/~(.)/g, '$1');
-                this.apply(link, r[2], options);
-
-                node.appendChild(link);
-            } },
-
-        unnamedUri: { regex: '\\[\\[(' + rx.uri + ')\\]\\]',
-            build: 'dummy' },
-        unnamedLink: { regex: '\\[\\[(' + rx.link + ')\\]\\]',
-            build: 'dummy' },
-        unnamedInterwikiLink: { regex: '\\[\\[(' + rx.interwikiLink + ')\\]\\]',
-            build: 'dummy' },
-
-        rawUri: { regex: '(' + rx.rawUri + ')',
-            build: 'dummy' },
-
-        escapedSequence: { regex: '~(' + rx.rawUri + '|.)', capture: 1,
-            tag: 'span', attrs: { 'class': 'escaped' } },
-        escapedSymbol: { regex: /~(.)/, capture: 1,
-            tag: 'span', attrs: { 'class': 'escaped' } }
-    };
-    g.unnamedUri.build = g.rawUri.build = function(node, r, options) {
-        if (!options) { options = {}; }
-        options.isPlainUri = true;
-        g.namedUri.build.call(this, node, Array(r[0], r[1], r[1]), options);
-    };
-    g.unnamedLink.build = function(node, r, options) {
-        g.namedLink.build.call(this, node, Array(r[0], r[1], r[1]), options);
-    };
-    g.namedInterwikiLink = { regex: '\\[\\[(' + rx.interwikiLink + ')\\|(' + rx.linkText + ')\\]\\]',
-        build: function(node, r, options) {
-                var link = document.createElement('a');
-
-                var m, f;
-                if (options &amp;&amp; options.interwiki) {
-                m = r[1].match(/(.*?):(.*)/);
-                f = options.interwiki[m[1]];
-            }
-
-            if (typeof f == 'undefined') {
-                if (!g.namedLink.apply) {
-                    g.namedLink = new this.constructor(g.namedLink);
-                }
-                return g.namedLink.build.call(g.namedLink, node, r, options);
-            }
-
-            link.href = formatLink(m[2].replace(/~(.)/g, '$1'), f);
-
-            this.apply(link, r[2], options);
-
-            node.appendChild(link);
-        }
-    };
-    g.unnamedInterwikiLink.build = function(node, r, options) {
-        g.namedInterwikiLink.build.call(this, node, Array(r[0], r[1], r[1]), options);
-    };
-    g.namedUri.children = g.unnamedUri.children = g.rawUri.children =
-            g.namedLink.children = g.unnamedLink.children =
-            g.namedInterwikiLink.children = g.unnamedInterwikiLink.children =
-        [ g.escapedSymbol, g.img ];
-
-    for (var i = 1; i &lt;= 6; i++) {
-        g['h' + i] = { tag: 'h' + i, capture: 2,
-            regex: '(^|\\n)[ \\t]*={' + i + '}[ \\t]' +
-                   '([^~]*?(~(.|(?=\\n)|$))*)[ \\t]*=*\\s*(\\n|$)'
-        };
-    }
-
-    g.ulist.children = g.olist.children = [ g.li ];
-    g.li.children = [ g.ulist, g.olist ];
-    g.li.fallback = g.text;
-
-    g.table.children = [ g.tr ];
-    g.tr.children = [ g.th, g.td ];
-    g.td.children = [ g.singleLine ];
-    g.th.children = [ g.singleLine ];
-
-    g.h1.children = g.h2.children = g.h3.children =
-            g.h4.children = g.h5.children = g.h6.children =
-            g.singleLine.children = g.paragraph.children =
-            g.text.children = g.strong.children = g.em.children =
-        [ g.escapedSequence, g.strong, g.em, g.br, g.rawUri,
-            g.namedUri, g.namedInterwikiLink, g.namedLink,
-            g.unnamedUri, g.unnamedInterwikiLink, g.unnamedLink,
-            g.tt, g.img ];
-
-    g.root = {
-        children: [ g.h1, g.h2, g.h3, g.h4, g.h5, g.h6,
-            g.hr, g.ulist, g.olist, g.preBlock, g.table ],
-        fallback: { children: [ g.paragraph ] }
-    };
-
-    Parse.Simple.Base.call(this, g, options);
-};
-
-Parse.Simple.Creole.prototype = new Parse.Simple.Base();
-
-Parse.Simple.Creole.prototype.constructor = Parse.Simple.Creole;
-
-</xsl:text>
-      </xsl:if>
-      <xsl:text>
-var creole = new Parse.Simple.Creole( {
-    forIE: document.all,
-    interwiki: {
-        Wikipedia: 'http://en.wikipedia.org/wiki/'
-    }, linkFormat: ''
-} );
-
-</xsl:text>
-
    </xsl:template>
 
    <!--
      CSS properties for the entire HTML document.
      -->
    <xsl:template name="DocumentCSSStyles">
-      <xsl:text>
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* More-configurable styles */
-
-/******** General ********/
-
-/* Document body */
+      <xsl:text disable-output-escaping="yes">
+/* XS3P specific CSS */
 body {
-   color: Black;
-   background-color: White;
-   font-family: Arial, sans-serif;
-   font-size: 10pt;
-}
-/* Horizontal rules */
-hr {
-   color: black;
-}
-/* Document title */
-h1 {
-   font-size: 18pt;
-   letter-spacing: 2px;
-   border-bottom: 1px #ccc solid;
-   padding-top: 5px;
-   padding-bottom: 5px;
-}
-/* Main section headers */
-h2 {
-   font-size: 14pt;
-   letter-spacing: 1px;
-}
-/* Sub-section headers */
-h3, h3 a, h3 span {
-   font-size: 12pt;
-   font-weight: bold;
-   color: black;
-}
-/* Table displaying the properties of the schema components or the
-   schema document itself */
-table.properties th, table.properties th a {
-   color: black;
-   background-color: #F99; /* Pink */
-}
-table.properties td {
-   background-color: #eee; /* Gray */
-}
-/* Documentation popup */
-#docPopupShade {
-   left: 0px;
-   right: 0px;
-   top: 0px;
-   bottom: 0px;
-   position: fixed;
-   opacity: 0.5;
-   background-color: black;
-   display: none;
-}
-#docPopup {
-   width: 400px;
-   height: 400px;
-   position: fixed;
-   top: 50%;
-   left: 50%;
-   opacity: 1;
-   margin: -200px 0 0 -200px;
-   padding: 10px;
-   background-color: white;
-   border: 1px solid black;
-   display: none;
-}
-#docPopupCloseBtn {
-   position: absolute;
-   top: 0px;
-   right: 4px;
-}
-#docPopupCloseBtn a {
-   text-decoration: none;
-   color: black;
-   font-family: monospace;
+	background-color: #FFF;
+	padding-top: 50px;
 }
 
-
-/******** Table of Contents Section ********/
-
-/* Controls for switching between printing and viewing modes */
-div#printerControls {
-   color: #963; /* Orange-brown */
+.nav &gt; li.active {
+	background-color: #FFF;
 }
-/* Controls that can collapse or expand all XML Instance
-   Representation and Schema Component Representation boxes */
-div#globalControls {
-   border: 2px solid #999;
+.nav &gt; li &gt; a:hover {
+	background-color: #CCC;
 }
 
-
-/******** Schema Document Properties Section ********/
-
-/* Table displaying the namespaces declared in the schema */
-table.namespaces th {
-   background-color: #ccc;
-}
-table.namespaces td {
-   background-color: #eee;
-}
-/* Target namespace of the schema */
-span.targetNS {
-   color: #06C;
-   font-weight: bold;
+code {
+	color: #333;
 }
 
-
-/******** Schema Components' Sections ********/
-
-/* Name of schema component */
-.name {
-   color: #F93; /* Orange */
+.container-fluid {
+	padding: 15px 15px;
 }
 
-/* Hierarchy table */
-table.hierarchy {
-   border: 2px solid #999; /* Gray */
+.nav-sub-item &gt; a {
+	padding-left: 30px !important;
 }
 
-/* XML Instance Representation table */
-div.sample div.contents {
-   border: 2px dashed black;
+a.name {
+	padding-top: 65px;
 }
 
-/* Schema Component Representation table */
-div.schemaComponent div.contents {
-   border: 2px black solid;
+h3.xs3p-subsection-heading {
+	margin-bottom: 30px;
 }
 
-
-/******** Glossary Section ********/
-
-/* Glossary Terms */
-.glossaryTerm {
-   color: #036; /* Blue */
+section, #top {
+	margin-top: -65px;
+	padding-top: 65px;
 }
 
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* Printer-version styles */
-
-@media print {
-
-/* Ensures that controls are hidden when printing */
-div#printerControls {
-   visibility: hidden;
-}
-div#globalControls {
-   visibility: hidden;
-}
-#legend {
-   display: none;
-}
-#legendTOC {
-   display: none;
-}
-#glossary {
-   display: none;
-}
-#glossaryTOC {
-   display: none;
+pre {
+	padding: 5px;
 }
 
+.xs3p-sidenav {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	background-color: #EEE;
+	border-radius: 10px;
+}
+.xs3p-navbar-title {
+	color: #FFF !important;
+	font-weight: bold;
+}
+.xs3p-in-panel-table {
+	margin-bottom: 0px;
+}
+.xs3p-sidebar {
+	position: static;
+}
+.xs3p-collapse-button {
+	font-size: 8pt;
+}
+.panel-heading .xs3p-panel-title:after {
+	font-family: 'Glyphicons Halflings';
+	content: "\e114";
+	float: left;
+	color: grey;
+	margin-right: 10px;
+}
+.panel-heading .xs3p-panel-title.collapsed:after {
+	content: "\e080";
+}
+.panel-info > .panel-heading .xs3p-panel-title:after {
+	color: white;
+}
+.xs3p-panel-help {
+	color: #CCCCCC;
+	cursor: pointer;
 }
 
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* Base styles */
-
-/******** General ********/
-
-/* Unordered lists */
-ul {
-   margin-left: 1.5em;
-   margin-bottom: 0em;
-}
-/* Tables */
-table {
-   margin-top: 10px;
-   margin-bottom: 10px;
-   margin-left: 2px;
-   margin-right: 2px;
-}
-table th, table td {
-   font-size: 10pt;
-   vertical-align: top;
-   padding-top: 3px;
-   padding-bottom: 3px;
-   padding-left: 10px;
-   padding-right: 10px;
-}
-table th {
-   font-weight: bold;
-   text-align: left;
-}
-/* Table displaying the properties of the schema components or the
-   schema document itself */
-table.properties {
-   width: 90%;
-}
-table.properties th {
-   width: 30%;
-}
-/* Boxes that can make its content appear and disappear*/
-div.box {
-   margin: 1em;
-}
-   /* Box caption */
-div.box span.caption {
-   font-weight: bold;
-}
-   /* Button to open and close the box */
-div.box input.control {
-   width: 1.4em;
-   height: 1.4em;
-   text-align: center;
-   vertical-align: middle;
-   font-size: 11pt;
-}
-   /* Box contents */
-div.box div.contents {
-   margin-top: 3px;
+.panel-group {
+	margin-bottom: 20px;
 }
 
-
-/******** Table of Contents Section ********/
-
-/* Controls for switching between printing and viewing modes */
-div#printerControls {
-   white-space: nowrap;
-   font-weight: bold;
-   padding: 5px;
-   margin: 5px;
-}
-/* Controls that can collapse or expand all XML Instance
-   Representation and Schema Component Representation boxes */
-div#globalControls {
-   padding: 10px;
-   margin: 5px;
+.btn-doc {
+	padding: 0px;
+	border: 0px none;
+	background: none repeat scroll 0% 0% transparent;
+	line-height: 1;
+	font-size: 12px;
 }
 
-
-/******** Schema Document Properties Section ********/
-
-/* Table displaying the namespaces declared in the schema */
-table.namespaces th {
-}
-table.namespaces td {
-}
-/* Target namespace of the schema */
-span.targetNS {
+.unpre {
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	white-space: normal;
+	word-break: normal;
+	word-wrap: normal;
 }
 
-
-/******** Schema Components' Sections ********/
-
-/* Name of schema component */
-.name {
+.popover {
+	max-width: 400px;
 }
 
-/* Hidden documentation */
-.hidden {
-   display: none;
-}
+// Syntax highlighting
+.codehilite .err {color: #FFF; background-color: #D2322D; font-weight: bold;} /* Error */
+.codehilite .c   {color: #999;}
+.codehilite .cs  {color: #999; font-style: italic;}
+.codehilite .nt  {color: #2F6F9F;}
+.codehilite .nn  {color: #39B3D7;}
+.codehilite .na  {color: #47A447;}
+.codehilite .s   {color: #D2322D;}
+.codehilite a       {color: inherit !important; text-decoration: underline !important;}
+.codehilite a:hover {opacity: 0.7 !important;}
 
-/* Hierarchy table */
-table.hierarchy {
-   width: 90%;
-}
-table.hierarchy th {
-   font-weight: normal;
-   font-style: italic;
-   width: 20%;
-}
-table.hierarchy th, table.hierarchy td {
-   padding: 5px;
-}
-
-/* Annotations section */
-div.annotation {
-   width: 90%;
-   padding: 5px 10px;
-   font-size: 12pt;
-}
-div.annotation pre {
-   border: 1px dashed #999;
-   background-color: #eee;
-   margin: 0px 10px;
-   padding: 2px;
-}
-div.annotation table {
-   margin-left: 10px;
-}
-div.annotation th {
-   background-color: #ccc;
-}
-div.annotation td {
-   background-color: #eee;
-}
-
-/* XML Instance Representation table */
-div.sample {
-   width: 90%;
-}
-div.sample div.contents {
-   padding: 5px;
-   font-family: Courier New, sans-serif;
-   font-size: 10pt;
-}
-   /* Normal elements and attributes */
-div.sample div.contents, div.sample div.contents a {
-   color: black;
-}
-   /* Group Headers */
-div.sample div.contents .group, div.sample div.contents .group a {
-   color: #999; /* Light gray */
-}
-   /* Type Information */
-div.sample div.contents .type, div.sample div.contents .type a {
-   color: #999; /* Light gray */
-}
-   /* Occurrence Information */
-div.sample div.contents .occurs, div.sample div.contents .occurs a {
-   color: #999; /* Light gray */
-}
-   /* Fixed values */
-div.sample div.contents .fixed {
-   color: #063; /* Green */
-   font-weight: bold;
-}
-   /* Simple type constraints */
-div.sample div.contents .constraint, div.sample div.contents .constraint a {
-   color: #999; /* Light gray */
-}
-   /* Elements and attributes inherited from base type */
-div.sample div.contents .inherited, div.sample div.contents .inherited a {
-   color: #666; /* Dark gray */
-}
-   /* Elements and attributes added to or changed from base type */
-div.sample div.contents .newFields {
-   font-weight: bold;
-}
-   /* Other type of information */
-div.sample div.contents .other, div.sample div.contents .other a {
-   color: #369; /* Blue */
-   font-style: italic;
-}
-   /* Link to open up window displaying documentation */
-div.sample div.contents a.documentation {
-   text-decoration: none;
-   padding-left: 3px;
-   padding-right: 3px;
-   padding-top: 0px;
-   padding-bottom: 0px;
-   font-weight: bold;
-   font-size: 11pt;
-   background-color: #FFD;
-   color: #069;
-}
-   /* Invert colors when hovering over link to open up window
-      displaying documentation */
-div.sample div.contents a.documentation:hover {
-   color: #FFD;
-   background-color: #069;
-}
-
-/* Schema Component Representation table */
-div.schemaComponent {
-   width: 90%;
-}
-div.schemaComponent div.contents {
-   font-family: Courier New, sans-serif;
-   font-size: 10pt;
-   padding: 5px;
-}
-   /* Syntax characters */
-div.schemaComponent div.contents {
-   color: #00f; /* blue */
-}
-   /* Element and attribute tags */
-div.schemaComponent div.contents .scTag {
-   color: #933; /* maroon */
-}
-   /* Element and attribute content */
-div.schemaComponent div.contents .scContent, div.schemaComponent div.contents .scContent a {
-   color: black;
-   font-weight: bold;
-}
-   /* Comments */
-div.schemaComponent div.contents .comment {
-   color: #999; /* Light gray */
-}
-
-/******** Legend Section ********/
-
-div#legend table, div#legend div {
-   margin-bottom: 3px;
-}
-div#legend div.hint {
-   color: #999; /* Light gray */
-   width: 90%;
-   margin-left: 1em;
-   margin-bottom: 2em;
-}
-
-
-/******** Glossary Section ********/
-
-/* Glossary Terms */
-.glossaryTerm {
-   font-weight: bold;
-}
-
-
-/******** Footer ********/
-
-.footer {
-   font-size: 8pt;
+@media (min-width: 992px) {
+	.xs3p-sidebar {
+		position: fixed;
+		top: 65px;
+		width: 22%;
+	}
 }
 </xsl:text>
    </xsl:template>
 
    <!--
-     Print outs a legend describing the meaning of colors, bold items,
-     etc. in the top-level sections.
-     -->
-   <xsl:template name="Legend">
-      <!-- Header -->
-      <div style="float: left; width: 15em;">
-         <h3 style="margin-bottom: 0px;">Complex Type:</h3>
-         <div class="hint" style="margin-left: 0em;">Schema Component Type</div>
-      </div>
-      <div style="float: left; width: 15em;">
-         <h3 style="margin-bottom: 0px;"><span class="name">AusAddress</span></h3>
-         <div class="hint" style="margin-left: 0em;">Schema Component Name</div>
-      </div>
-
-      <!-- Hierarchy Table -->
-      <table class="hierarchy" style="clear : both">
-         <tr>
-            <xsl:choose>
-               <xsl:when test="normalize-space(translate($printAllSuperTypes, 'TRUE', 'true'))='true'">
-                  <th>Super-types:</th>
-                  <td>
-                     <span class="type" style="color: #0000FF; text-decoration:underline;">Address</span>
-                     <xsl:text> &lt; </xsl:text>
-                     <span class="current">AusAddress</span>
-                     <xsl:text> (by extension)</xsl:text>
-                  </td>
-               </xsl:when>
-               <xsl:otherwise>
-                  <th>Parent type:</th>
-                  <td>
-                     <span class="type" style="color: #0000FF; text-decoration:underline;">Address</span>
-                     <xsl:text> (derivation method: extension)</xsl:text>
-                  </td>
-               </xsl:otherwise>
-            </xsl:choose>
-         </tr>
-         <tr>
-            <xsl:choose>
-               <xsl:when test="normalize-space(translate($printAllSubTypes, 'TRUE', 'true'))='true'">
-                  <th>Sub-types:</th>
-                  <td>
-                     <ul>
-                        <li>
-                           <span class="type" style="color: #0000FF; text-decoration:underline;">QLDAddress</span>
-                           <xsl:text> (by restriction)</xsl:text>
-                        </li>
-                     </ul>
-                  </td>
-               </xsl:when>
-               <xsl:otherwise>
-                  <th>Direct sub-types:</th>
-                  <td>
-                     <ul>
-                        <li>
-                           <span class="type" style="color: #0000FF; text-decoration:underline;">QLDAddress</span>
-                           <xsl:text> (by restriction)</xsl:text>
-                        </li>
-                     </ul>
-                  </td>
-               </xsl:otherwise>
-            </xsl:choose>
-         </tr>
-      </table>
-      <div class="hint">If this schema component is a type definition, its type hierarchy is shown in a gray-bordered box.</div>
-
-      <!-- Properties Table -->
-      <table class="properties">
-         <tr>
-            <th>Name</th>
-            <td>AusAddress</td>
-         </tr>
-         <tr>
-            <th>
-               <a title="Look up 'Abstract' in glossary" href="#term_Abstract">Abstract</a>
-            </th>
-            <td>no</td>
-         </tr>
-      </table>
-      <div class="hint">The table above displays the properties of this schema component.</div>
-
-      <!-- XML Instance Representation Table -->
-      <div class="sample box">
-         <div>
-            <span class="caption">XML Instance Representation</span>
-         </div>
-         <div class="contents">
-            <span style="margin-left: 0em">&lt;...</span>
-            <span class="newFields">
-               <span> country="<span class="fixed">Australia</span>"</span>
-            </span>
-            <xsl:text>&gt; </xsl:text><br/>
-            <span style="margin-left: 1.5em" class="inherited">&lt;unitNo&gt; <span class="type">string</span> &lt;/unitNo&gt; <span class="occurs">[0..1]</span></span><br/>
-            <span style="margin-left: 1.5em" class="inherited">&lt;houseNo&gt; <span class="type">string</span> &lt;/houseNo&gt; <span class="occurs">[1]</span></span><br/>
-            <span style="margin-left: 1.5em" class="inherited">&lt;street&gt; <span class="type">string</span> &lt;/street&gt; <span class="occurs">[1]</span></span><br/>
-            <span class="group" style="margin-left: 1.5em">Start <a title="Look up 'Choice' in glossary" href="#term_Choice">Choice</a> <span class="occurs">[1]</span></span><br/>
-            <span style="margin-left: 3em" class="inherited">&lt;city&gt; <span class="type">string</span> &lt;/city&gt; <span class="occurs">[1]</span></span><br/>
-            <span style="margin-left: 3em" class="inherited">&lt;town&gt; <span class="type">string</span> &lt;/town&gt; <span class="occurs">[1]</span></span><br/>
-            <span class="group" style="margin-left: 1.5em">End Choice</span><br/>
-            <span class="newFields">
-            <span style="margin-left: 1.5em">&lt;state&gt; <span class="type" style="text-decoration:underline;">AusStates</span> &lt;/state&gt; <span class="occurs">[1]</span></span><br/>
-            <span style="margin-left: 1.5em">&lt;postcode&gt; <span class="constraint">string &lt;&lt;<em>pattern</em> = [1-9][0-9]{3}>></span> &lt;/postcode&gt; <span class="occurs">[1]</span>
-               <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true'">
-                  <a href="javascript:void(0)" title="View Documentation" class="documentation" onclick="docArray = new Array('Post code must be a four-digit number.'); viewDocumentation('Element', 'postcode', docArray);">?</a>
-               </xsl:if>
-               </span><br/>
-            </span>
-            <span style="margin-left: 0em">&lt;/...&gt;</span><br/>
-         </div>
-      </div>
-      <div class="hint">
-         <p>The XML Instance Representation table above shows the schema component's content as an XML instance.</p>
-         <ul>
-            <li>The minimum and maximum occurrence of elements and attributes are provided in square brackets, e.g. [0..1].</li>
-            <li>Model group information are shown in gray, e.g. Start Choice ... End Choice.</li>
-            <li>For type derivations, the elements and attributes that have been added to or changed from the base type's content are shown in <span style="font-weight: bold">bold</span>.</li>
-            <li>If an element/attribute has a fixed value, the fixed value is shown in green, e.g. country="Australia".</li>
-            <li>Otherwise, the type of the element/attribute is displayed.
-               <ul>
-                  <li>If the element/attribute's type is in the schema, a link is provided to it.</li>
-                  <!--<li>An <em>E</em> symbol is shown if the element/attribute's type is located in an external schema.</li>-->
-                  <li>For local simple type definitions, the constraints are displayed in angle brackets, e.g. &lt;&lt;<em>pattern</em> = [1-9][0-9]{3}>>.</li>
-               </ul>
-            </li>
-            <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true'">
-               <li>If a local element/attribute has documentation, it will be displayed in a window that pops up when the question mark inside the attribute or next to the element is clicked, e.g. &lt;postcode>.</li>
-            </xsl:if>
-         </ul>
-      </div>
-
-      <!-- Schema Component Representation Table -->
-      <div class="schemaComponent box">
-         <div>
-            <span class="caption">Schema Component Representation</span>
-         </div>
-         <div class="contents">
-            <span style="margin-left: 0em">&lt;<span class="scTag">complexType</span> <span class="scTag">name</span>="<span class="scContent">AusAddress</span>"&gt;</span><br/>
-            <span style="margin-left: 1.5em">&lt;<span class="scTag">complexContent</span>&gt;</span><br/>
-            <span style="margin-left: 3em">&lt;<span class="scTag">extension</span> <span class="scTag">base</span>="<span class="scContent"><span class="type" style="text-decoration:underline;">Address</span></span>"&gt;</span><br/>
-            <span style="margin-left: 4.5em">&lt;<span class="scTag">sequence</span>&gt;</span><br/>
-            <span style="margin-left: 6em">&lt;<span class="scTag">element</span> <span class="scTag">name</span>="<span class="scContent">state</span>" <span class="scTag">type</span>="<span class="scContent"><span class="type" style="text-decoration:underline;">AusStates</span></span>"/&gt;</span><br/>
-            <span style="margin-left: 6em">&lt;<span class="scTag">element</span> <span class="scTag">name</span>="<span class="scContent">postcode</span>"&gt;</span><br/>
-            <span style="margin-left: 7.5em">&lt;<span class="scTag">simpleType</span>&gt;</span><br/>
-            <span style="margin-left: 9em">&lt;<span class="scTag">restriction</span> <span class="scTag">base</span>="<span class="scContent"><span class="type">string</span></span>"&gt;</span><br/>
-            <span style="margin-left: 10.5em">&lt;<span class="scTag">pattern</span> <span class="scTag">value</span>="<span class="scContent">[1-9][0-9]{3}</span>"/&gt;</span><br/>
-            <span style="margin-left: 9em">&lt;/<span class="scTag">restriction</span>&gt;</span><br/>
-            <span style="margin-left: 7.5em">&lt;/<span class="scTag">simpleType</span>&gt;</span><br/>
-            <span style="margin-left: 6em">&lt;/<span class="scTag">element</span>&gt;</span><br/>
-            <span style="margin-left: 4.5em">&lt;/<span class="scTag">sequence</span>&gt;</span><br/>
-            <span style="margin-left: 4.5em">&lt;<span class="scTag">attribute</span> <span class="scTag">name</span>="<span class="scContent">country</span>" <span class="scTag">type</span>="<span class="scContent"><span class="type">string</span></span>" <span class="scTag">fixed</span>="<span class="scContent">Australia</span>"/&gt;</span><br/>
-            <span style="margin-left: 3em">&lt;/<span class="scTag">extension</span>&gt;</span><br/>
-            <span style="margin-left: 1.5em">&lt;/<span class="scTag">complexContent</span>&gt;</span><br/>
-            <span style="margin-left: 0em">&lt;/<span class="scTag">complexType</span>&gt;</span><br/>
-         </div>
-      </div>
-      <div class="hint">The Schema Component Representation table above displays the underlying XML representation of the schema component. (Annotations are not shown.)</div>
-   </xsl:template>
-
-   <!--
-     Print outs all terms for the glossary section.
+     Prints out all terms for the glossary section.
      -->
    <xsl:template name="Glossary">
       <xsl:call-template name="PrintGlossaryTerm">
@@ -2223,7 +1073,7 @@ div#legend div.hint {
 
       <p>
          <span class="glossaryTerm">
-            <a name="{concat($TERM_PREFIX, $code)}"><xsl:value-of select="$term"/></a>
+            <a id="{concat($TERM_PREFIX, $code)}"><xsl:value-of select="$term"/></a>
             <xsl:text> </xsl:text>
          </span>
          <xsl:copy-of select="$description"/>
@@ -2263,34 +1113,50 @@ div#legend div.hint {
       </xsl:variable>
       <!-- Print hierarchy table -->
       <xsl:if test="@substitutionGroup or normalize-space($hasMembers)='true'">
-         <table class="hierarchy">
-            <tr>
-               <td>
-                  <ul>
-                     <!-- Print substitution group that this element belongs to -->
-                     <xsl:if test="@substitutionGroup">
-                        <li>
-                           <em>This element can be used wherever the following element is referenced:</em>
+         <xsl:call-template name="CollapseableBox">
+            <xsl:with-param name="id">
+               <xsl:call-template name="GetComponentID">
+                  <xsl:with-param name="component" select="."/>
+               </xsl:call-template>
+            </xsl:with-param>
+            <xsl:with-param name="anchor">type-hierarchy</xsl:with-param>
+            <xsl:with-param name="styleClass">sample</xsl:with-param>
+            <xsl:with-param name="caption">Type hierarchy</xsl:with-param>
+            <xsl:with-param name="contents">
+               <table class="table table-striped xs3p-in-panel-table">
+                  <tbody>
+                     <tr>
+                        <td>
                            <ul>
-                              <li>
-                                 <xsl:call-template name="PrintElementRef">
-                                    <xsl:with-param name="ref" select="@substitutionGroup"/>
-                                 </xsl:call-template>
-                              </li>
+                              <!-- Print substitution group that this element belongs to -->
+                              <xsl:if test="@substitutionGroup">
+                                 <li>
+                                    <em>This element can be used wherever the following element is referenced:</em>
+                                    <ul>
+                                       <li>
+                                          <xsl:call-template name="PrintElementRef">
+                                             <xsl:with-param name="ref" select="@substitutionGroup"/>
+                                          </xsl:call-template>
+                                       </li>
+                                    </ul>
+                                 </li>
+                              </xsl:if>
+                              <!-- Print substitution group that this element heads -->
+                              <xsl:if test="normalize-space($hasMembers)='true'">
+                                 <li>
+                                    <em>The following elements can be used wherever this element is referenced:</em>
+                                    <xsl:copy-of select="$members"/>
+                                 </li>
+                              </xsl:if>
                            </ul>
-                        </li>
-                     </xsl:if>
-                     <!-- Print substitution group that this element heads -->
-                     <xsl:if test="normalize-space($hasMembers)='true'">
-                        <li>
-                           <em>The following elements can be used wherever this element is referenced:</em>
-                           <xsl:copy-of select="$members"/>
-                        </li>
-                     </xsl:if>
-                  </ul>
-               </td>
-            </tr>
-         </table>
+                        </td>
+                     </tr>
+                  </tbody>
+               </table>
+            </xsl:with-param>
+            <xsl:with-param name="isOpened">true</xsl:with-param>
+            <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+         </xsl:call-template>
       </xsl:if>
    </xsl:template>
 
@@ -2298,102 +1164,134 @@ div#legend div.hint {
      Prints out Hierarchy table for complex type definitions.
      -->
    <xsl:template match="xsd:complexType" mode="hierarchy">
-      <table class="hierarchy">
-         <!-- Print super types -->
-         <tr>
-            <th>
-               <xsl:choose>
-                  <xsl:when test="normalize-space(translate($printAllSuperTypes, 'TRUE', 'true'))='true'">
-                     <xsl:text>Super-types:</xsl:text>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>Parent type:</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </th>
-            <td>
-               <xsl:choose>
-                  <xsl:when test="xsd:simpleContent or xsd:complexContent">
-                     <xsl:call-template name="PrintSupertypes">
-                        <xsl:with-param name="type" select="."/>
-                     </xsl:call-template>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>None</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </td>
-         </tr>
-         <!-- Print sub types -->
-         <tr>
-            <th>
-               <xsl:choose>
-                  <xsl:when test="normalize-space(translate($printAllSubTypes, 'TRUE', 'true'))='true'">
-                     <xsl:text>Sub-types:</xsl:text>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>Direct sub-types:</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </th>
-            <td>
-               <xsl:call-template name="PrintComplexSubtypes">
-                  <xsl:with-param name="type" select="."/>
-               </xsl:call-template>
-            </td>
-         </tr>
-      </table>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="anchor">type-hierarchy</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Type hierarchy</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Print super types -->
+                  <tr>
+                     <th>
+                        <xsl:choose>
+                           <xsl:when test="normalize-space(translate($printAllSuperTypes, 'TRUE', 'true'))='true'">
+                              <xsl:text>Super-types:</xsl:text>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>Parent type:</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </th>
+                     <td>
+                        <xsl:choose>
+                           <xsl:when test="xsd:simpleContent or xsd:complexContent">
+                              <xsl:call-template name="PrintSupertypes">
+                                 <xsl:with-param name="type" select="."/>
+                              </xsl:call-template>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>None</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </td>
+                  </tr>
+                  <!-- Print sub types -->
+                  <tr>
+                     <th>
+                        <xsl:choose>
+                           <xsl:when test="normalize-space(translate($printAllSubTypes, 'TRUE', 'true'))='true'">
+                              <xsl:text>Sub-types:</xsl:text>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>Direct sub-types:</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </th>
+                     <td>
+                        <xsl:call-template name="PrintComplexSubtypes">
+                           <xsl:with-param name="type" select="."/>
+                        </xsl:call-template>
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
      Prints out Hierarchy table for simple type definitions.
      -->
    <xsl:template match="xsd:simpleType" mode="hierarchy">
-      <table class="hierarchy">
-         <!-- Print super types -->
-         <tr>
-            <th>
-               <xsl:choose>
-                  <xsl:when test="normalize-space(translate($printAllSuperTypes, 'TRUE', 'true'))='true'">
-                     <xsl:text>Super-types:</xsl:text>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>Parent type:</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </th>
-            <td>
-               <xsl:choose>
-                  <xsl:when test="xsd:restriction">
-                     <xsl:call-template name="PrintSupertypes">
-                        <xsl:with-param name="type" select="."/>
-                     </xsl:call-template>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>None</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </td>
-         </tr>
-         <!-- Print sub types -->
-         <tr>
-            <th>
-               <xsl:choose>
-                  <xsl:when test="normalize-space(translate($printAllSubTypes, 'TRUE', 'true'))='true'">
-                     <xsl:text>Sub-types:</xsl:text>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>Direct sub-types:</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </th>
-            <td>
-               <xsl:call-template name="PrintSimpleSubtypes">
-                  <xsl:with-param name="type" select="."/>
-               </xsl:call-template>
-            </td>
-         </tr>
-      </table>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="anchor">type-hierarchy</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Type hierarchy</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Print super types -->
+                  <tr>
+                     <th>
+                        <xsl:choose>
+                           <xsl:when test="normalize-space(translate($printAllSuperTypes, 'TRUE', 'true'))='true'">
+                              <xsl:text>Super-types:</xsl:text>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>Parent type:</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </th>
+                     <td>
+                        <xsl:choose>
+                           <xsl:when test="xsd:restriction">
+                              <xsl:call-template name="PrintSupertypes">
+                                 <xsl:with-param name="type" select="."/>
+                              </xsl:call-template>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>None</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </td>
+                  </tr>
+                  <!-- Print sub types -->
+                  <tr>
+                     <th>
+                        <xsl:choose>
+                           <xsl:when test="normalize-space(translate($printAllSubTypes, 'TRUE', 'true'))='true'">
+                              <xsl:text>Sub-types:</xsl:text>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>Direct sub-types:</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </th>
+                     <td>
+                        <xsl:call-template name="PrintSimpleSubtypes">
+                           <xsl:with-param name="type" select="."/>
+                        </xsl:call-template>
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -2848,49 +1746,81 @@ div#legend div.hint {
      attribute declaration.
      -->
    <xsl:template match="xsd:attribute" mode="properties">
-      <table class="properties">
-         <!-- Name -->
-         <tr>
-            <th>Name</th>
-            <td><xsl:value-of select="@name"/></td>
-         </tr>
-         <!-- Type -->
-         <tr>
-            <th>Type</th>
-            <td>
-               <xsl:choose>
-                  <xsl:when test="xsd:simpleType">
-                     <xsl:text>Locally-defined simple type</xsl:text>
-                  </xsl:when>
-                  <xsl:when test="@type">
-                     <xsl:call-template name="PrintTypeRef">
-                        <xsl:with-param name="ref" select="@type"/>
-                     </xsl:call-template>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>anySimpleType</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </td>
-         </tr>
-         <!-- Default Value -->
-         <xsl:if test="@default">
-            <tr>
-               <th>Default Value</th>
-               <td><xsl:value-of select="@default"/></td>
-            </tr>
-         </xsl:if>
-         <!-- Fixed Value -->
-         <xsl:if test="@fixed">
-            <tr>
-               <th>Fixed Value</th>
-               <td><xsl:value-of select="@fixed"/></td>
-            </tr>
-         </xsl:if>
-      </table>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_PROPERTIES"/>
+         <xsl:with-param name="anchor">properties-table</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Properties</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Name -->
+                  <tr>
+                     <th>Name</th>
+                     <td><xsl:value-of select="@name"/></td>
+                  </tr>
+                  <!-- Type -->
+                  <tr>
+                     <th>Type</th>
+                     <td>
+                        <xsl:choose>
+                           <xsl:when test="xsd:simpleType">
+                              <xsl:text>Locally-defined simple type</xsl:text>
+                           </xsl:when>
+                           <xsl:when test="@type">
+                              <xsl:call-template name="PrintTypeRef">
+                                 <xsl:with-param name="ref" select="@type"/>
+                              </xsl:call-template>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>anySimpleType</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </td>
+                  </tr>
+                  <!-- Default Value -->
+                  <xsl:if test="@default">
+                     <tr>
+                        <th>Default Value</th>
+                        <td><xsl:value-of select="@default"/></td>
+                     </tr>
+                  </xsl:if>
+                  <!-- Fixed Value -->
+                  <xsl:if test="@fixed">
+                     <tr>
+                        <th>Fixed Value</th>
+                        <td><xsl:value-of select="@fixed"/></td>
+                     </tr>
+                  </xsl:if>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
       <!-- Annotation -->
-      <xsl:call-template name="PrintAnnotation">
-         <xsl:with-param name="component" select="."/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_DOCUMENTATION"/>
+         <xsl:with-param name="anchor">doc-panel</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Documentation</xsl:with-param>
+         <xsl:with-param name="contents">
+            <xsl:call-template name="PrintAnnotation">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="containsCode">false</xsl:with-param>
       </xsl:call-template>
    </xsl:template>
 
@@ -2899,16 +1829,48 @@ div#legend div.hint {
      attribute group or model group definition.
      -->
    <xsl:template match="xsd:attributeGroup | xsd:group" mode="properties">
-      <table class="properties">
-         <!-- Name -->
-         <tr>
-            <th>Name</th>
-            <td><xsl:value-of select="@name"/></td>
-         </tr>
-      </table>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_PROPERTIES"/>
+         <xsl:with-param name="anchor">properties-table</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Properties</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table tables-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Name -->
+                  <tr>
+                     <th>Name</th>
+                     <td><xsl:value-of select="@name"/></td>
+                  </tr>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
       <!-- Annotation -->
-      <xsl:call-template name="PrintAnnotation">
-         <xsl:with-param name="component" select="."/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_DOCUMENTATION"/>
+         <xsl:with-param name="anchor">doc-panel</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Documentation</xsl:with-param>
+         <xsl:with-param name="contents">
+            <xsl:call-template name="PrintAnnotation">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="containsCode">false</xsl:with-param>
       </xsl:call-template>
    </xsl:template>
 
@@ -2917,82 +1879,114 @@ div#legend div.hint {
      complex type definition.
      -->
    <xsl:template match="xsd:complexType" mode="properties">
-      <table class="properties">
-         <!-- Name -->
-         <tr>
-            <th>Name</th>
-            <td><xsl:value-of select="@name"/></td>
-         </tr>
-         <!-- Abstract -->
-         <tr>
-            <th>
-               <xsl:call-template name="PrintGlossaryTermRef">
-                  <xsl:with-param name="code">Abstract</xsl:with-param>
-                  <xsl:with-param name="term">Abstract</xsl:with-param>
-               </xsl:call-template>
-            </th>
-            <td>
-               <xsl:call-template name="PrintBoolean">
-                  <xsl:with-param name="boolean" select="@abstract"/>
-               </xsl:call-template>
-            </td>
-         </tr>
-         <!-- Final -->
-         <xsl:variable name="final">
-            <xsl:call-template name="PrintDerivationSet">
-               <xsl:with-param name="EBV">
-                  <xsl:choose>
-                     <xsl:when test="@final">
-                        <xsl:value-of select="@final"/>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:value-of select="/xsd:schema/@finalDefault"/>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </xsl:with-param>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
             </xsl:call-template>
-         </xsl:variable>
-         <xsl:if test="normalize-space($final)!=''">
-            <tr>
-               <th>
-                  <xsl:call-template name="PrintGlossaryTermRef">
-                     <xsl:with-param name="code">TypeFinal</xsl:with-param>
-                     <xsl:with-param name="term">Prohibited Derivations</xsl:with-param>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_PROPERTIES"/>
+         <xsl:with-param name="anchor">properties-table</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Properties</xsl:with-param>
+         <xsl:with-param name="contents">
+         <table class="table table-striped xs3p-in-panel-table">
+            <tbody>
+               <!-- Name -->
+               <tr>
+                  <th>Name</th>
+                  <td><xsl:value-of select="@name"/></td>
+               </tr>
+               <!-- Abstract -->
+               <tr>
+                  <th>
+                     <xsl:call-template name="PrintGlossaryTermRef">
+                        <xsl:with-param name="code">Abstract</xsl:with-param>
+                        <xsl:with-param name="term">Abstract</xsl:with-param>
+                     </xsl:call-template>
+                  </th>
+                  <td>
+                     <xsl:call-template name="PrintBoolean">
+                        <xsl:with-param name="boolean" select="@abstract"/>
+                     </xsl:call-template>
+                  </td>
+               </tr>
+               <!-- Final -->
+               <xsl:variable name="final">
+                  <xsl:call-template name="PrintDerivationSet">
+                     <xsl:with-param name="EBV">
+                        <xsl:choose>
+                           <xsl:when test="@final">
+                              <xsl:value-of select="@final"/>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:value-of select="/xsd:schema/@finalDefault"/>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </xsl:with-param>
                   </xsl:call-template>
-               </th>
-               <td><xsl:value-of select="$final"/></td>
-            </tr>
-         </xsl:if>
-         <!-- Block -->
-         <xsl:variable name="block">
-            <xsl:call-template name="PrintDerivationSet">
-               <xsl:with-param name="EBV">
-                  <xsl:choose>
-                     <xsl:when test="@block">
-                        <xsl:value-of select="@block"/>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:value-of select="/xsd:schema/@blockDefault"/>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </xsl:with-param>
-            </xsl:call-template>
-         </xsl:variable>
-         <xsl:if test="normalize-space($block)!=''">
-            <tr>
-               <th>
-                  <xsl:call-template name="PrintGlossaryTermRef">
-                     <xsl:with-param name="code">TypeBlock</xsl:with-param>
-                     <xsl:with-param name="term">Prohibited Substitutions</xsl:with-param>
+               </xsl:variable>
+               <xsl:if test="normalize-space($final)!=''">
+                  <tr>
+                     <th>
+                        <xsl:call-template name="PrintGlossaryTermRef">
+                           <xsl:with-param name="code">TypeFinal</xsl:with-param>
+                           <xsl:with-param name="term">Prohibited Derivations</xsl:with-param>
+                        </xsl:call-template>
+                     </th>
+                     <td><xsl:value-of select="$final"/></td>
+                  </tr>
+               </xsl:if>
+               <!-- Block -->
+               <xsl:variable name="block">
+                  <xsl:call-template name="PrintDerivationSet">
+                     <xsl:with-param name="EBV">
+                        <xsl:choose>
+                           <xsl:when test="@block">
+                              <xsl:value-of select="@block"/>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:value-of select="/xsd:schema/@blockDefault"/>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </xsl:with-param>
                   </xsl:call-template>
-               </th>
-               <td><xsl:value-of select="$block"/></td>
-            </tr>
-         </xsl:if>
-      </table>
+               </xsl:variable>
+               <xsl:if test="normalize-space($block)!=''">
+                  <tr>
+                     <th>
+                        <xsl:call-template name="PrintGlossaryTermRef">
+                           <xsl:with-param name="code">TypeBlock</xsl:with-param>
+                           <xsl:with-param name="term">Prohibited Substitutions</xsl:with-param>
+                        </xsl:call-template>
+                     </th>
+                     <td><xsl:value-of select="$block"/></td>
+                  </tr>
+               </xsl:if>
+            </tbody>
+         </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
       <!-- Annotation -->
-      <xsl:call-template name="PrintAnnotation">
-         <xsl:with-param name="component" select="."/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_DOCUMENTATION"/>
+         <xsl:with-param name="anchor">doc-panel</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Documentation</xsl:with-param>
+         <xsl:with-param name="contents">
+            <xsl:call-template name="PrintAnnotation">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="containsCode">false</xsl:with-param>
       </xsl:call-template>
    </xsl:template>
 
@@ -3001,132 +1995,164 @@ div#legend div.hint {
      element declaration.
      -->
    <xsl:template match="xsd:element" mode="properties">
-      <table class="properties">
-         <!-- Name -->
-         <tr>
-            <th>Name</th>
-            <td><xsl:value-of select="@name"/></td>
-         </tr>
-         <!-- Type -->
-         <tr>
-            <th>Type</th>
-            <td>
-               <xsl:choose>
-                  <xsl:when test="xsd:simpleType">
-                     <xsl:text>Locally-defined simple type</xsl:text>
-                  </xsl:when>
-                  <xsl:when test="xsd:complexType">
-                     <xsl:text>Locally-defined complex type</xsl:text>
-                  </xsl:when>
-                  <xsl:when test="@type">
-                     <xsl:call-template name="PrintTypeRef">
-                        <xsl:with-param name="ref" select="@type"/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_PROPERTIES"/>
+         <xsl:with-param name="anchor">properties-table</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Properties</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Name -->
+                  <tr>
+                     <th>Name</th>
+                     <td><xsl:value-of select="@name"/></td>
+                  </tr>
+                  <!-- Type -->
+                  <tr>
+                     <th>Type</th>
+                     <td>
+                        <xsl:choose>
+                           <xsl:when test="xsd:simpleType">
+                              <xsl:text>Locally-defined simple type</xsl:text>
+                           </xsl:when>
+                           <xsl:when test="xsd:complexType">
+                              <xsl:text>Locally-defined complex type</xsl:text>
+                           </xsl:when>
+                           <xsl:when test="@type">
+                              <xsl:call-template name="PrintTypeRef">
+                                 <xsl:with-param name="ref" select="@type"/>
+                              </xsl:call-template>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>anyType</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </td>
+                  </tr>
+                  <!-- Nillable -->
+                  <tr>
+                     <th>
+                        <xsl:call-template name="PrintGlossaryTermRef">
+                           <xsl:with-param name="code">Nillable</xsl:with-param>
+                           <xsl:with-param name="term">Nillable</xsl:with-param>
+                        </xsl:call-template>
+                     </th>
+                     <td>
+                        <xsl:call-template name="PrintBoolean">
+                           <xsl:with-param name="boolean" select="@nillable"/>
+                        </xsl:call-template>
+                     </td>
+                  </tr>
+                  <!-- Abstract -->
+                  <tr>
+                     <th>
+                        <xsl:call-template name="PrintGlossaryTermRef">
+                           <xsl:with-param name="code">Abstract</xsl:with-param>
+                           <xsl:with-param name="term">Abstract</xsl:with-param>
+                        </xsl:call-template>
+                     </th>
+                     <td>
+                        <xsl:call-template name="PrintBoolean">
+                           <xsl:with-param name="boolean" select="@abstract"/>
+                        </xsl:call-template>
+                     </td>
+                  </tr>
+                  <!-- Default Value -->
+                  <xsl:if test="@default">
+                     <tr>
+                        <th>Default Value</th>
+                        <td><xsl:value-of select="@default"/></td>
+                     </tr>
+                  </xsl:if>
+                  <!-- Fixed Value -->
+                  <xsl:if test="@fixed">
+                     <tr>
+                        <th>Fixed Value</th>
+                        <td><xsl:value-of select="@fixed"/></td>
+                     </tr>
+                  </xsl:if>
+                  <!-- Final -->
+                  <xsl:variable name="final">
+                     <xsl:call-template name="PrintDerivationSet">
+                        <xsl:with-param name="EBV">
+                           <xsl:choose>
+                              <xsl:when test="@final">
+                                 <xsl:value-of select="@final"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                 <xsl:value-of select="/xsd:schema/@finalDefault"/>
+                              </xsl:otherwise>
+                           </xsl:choose>
+                        </xsl:with-param>
                      </xsl:call-template>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>anyType</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </td>
-         </tr>
-         <!-- Nillable -->
-         <tr>
-            <th>
-               <xsl:call-template name="PrintGlossaryTermRef">
-                  <xsl:with-param name="code">Nillable</xsl:with-param>
-                  <xsl:with-param name="term">Nillable</xsl:with-param>
-               </xsl:call-template>
-            </th>
-            <td>
-               <xsl:call-template name="PrintBoolean">
-                  <xsl:with-param name="boolean" select="@nillable"/>
-               </xsl:call-template>
-            </td>
-         </tr>
-         <!-- Abstract -->
-         <tr>
-            <th>
-               <xsl:call-template name="PrintGlossaryTermRef">
-                  <xsl:with-param name="code">Abstract</xsl:with-param>
-                  <xsl:with-param name="term">Abstract</xsl:with-param>
-               </xsl:call-template>
-            </th>
-            <td>
-               <xsl:call-template name="PrintBoolean">
-                  <xsl:with-param name="boolean" select="@abstract"/>
-               </xsl:call-template>
-            </td>
-         </tr>
-         <!-- Default Value -->
-         <xsl:if test="@default">
-            <tr>
-               <th>Default Value</th>
-               <td><xsl:value-of select="@default"/></td>
-            </tr>
-         </xsl:if>
-         <!-- Fixed Value -->
-         <xsl:if test="@fixed">
-            <tr>
-               <th>Fixed Value</th>
-               <td><xsl:value-of select="@fixed"/></td>
-            </tr>
-         </xsl:if>
-         <!-- Final -->
-         <xsl:variable name="final">
-            <xsl:call-template name="PrintDerivationSet">
-               <xsl:with-param name="EBV">
-                  <xsl:choose>
-                     <xsl:when test="@final">
-                        <xsl:value-of select="@final"/>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:value-of select="/xsd:schema/@finalDefault"/>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </xsl:with-param>
-            </xsl:call-template>
-         </xsl:variable>
-         <xsl:if test="normalize-space($final)!=''">
-            <tr>
-               <th>
-                  <xsl:call-template name="PrintGlossaryTermRef">
-                     <xsl:with-param name="code">ElemFinal</xsl:with-param>
-                     <xsl:with-param name="term">Substitution Group Exclusions</xsl:with-param>
-                  </xsl:call-template>
-               </th>
-               <td><xsl:value-of select="$final"/></td>
-            </tr>
-         </xsl:if>
-         <!-- Block -->
-         <xsl:variable name="block">
-            <xsl:call-template name="PrintBlockSet">
-               <xsl:with-param name="EBV">
-                  <xsl:choose>
-                     <xsl:when test="@block">
-                        <xsl:value-of select="@block"/>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:value-of select="/xsd:schema/@blockDefault"/>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </xsl:with-param>
-            </xsl:call-template>
-         </xsl:variable>
-         <xsl:if test="normalize-space($block)!=''">
-            <tr>
-               <th>
-                  <xsl:call-template name="PrintGlossaryTermRef">
-                     <xsl:with-param name="code">ElemBlock</xsl:with-param>
-                     <xsl:with-param name="term">Disallowed Substitutions</xsl:with-param>
-                  </xsl:call-template>
-               </th>
-               <td><xsl:value-of select="$block"/></td>
-            </tr>
-         </xsl:if>
-      </table>
+                  </xsl:variable>
+                  <xsl:if test="normalize-space($final)!=''">
+                     <tr>
+                        <th>
+                           <xsl:call-template name="PrintGlossaryTermRef">
+                              <xsl:with-param name="code">ElemFinal</xsl:with-param>
+                              <xsl:with-param name="term">Substitution Group Exclusions</xsl:with-param>
+                           </xsl:call-template>
+                        </th>
+                        <td><xsl:value-of select="$final"/></td>
+                     </tr>
+                  </xsl:if>
+                  <!-- Block -->
+                  <xsl:variable name="block">
+                     <xsl:call-template name="PrintBlockSet">
+                        <xsl:with-param name="EBV">
+                           <xsl:choose>
+                              <xsl:when test="@block">
+                                 <xsl:value-of select="@block"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                 <xsl:value-of select="/xsd:schema/@blockDefault"/>
+                              </xsl:otherwise>
+                           </xsl:choose>
+                        </xsl:with-param>
+                     </xsl:call-template>
+                  </xsl:variable>
+                  <xsl:if test="normalize-space($block)!=''">
+                     <tr>
+                        <th>
+                           <xsl:call-template name="PrintGlossaryTermRef">
+                              <xsl:with-param name="code">ElemBlock</xsl:with-param>
+                              <xsl:with-param name="term">Disallowed Substitutions</xsl:with-param>
+                           </xsl:call-template>
+                        </th>
+                        <td><xsl:value-of select="$block"/></td>
+                     </tr>
+                  </xsl:if>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
       <!-- Annotation -->
-      <xsl:call-template name="PrintAnnotation">
-         <xsl:with-param name="component" select="."/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_DOCUMENTATION"/>
+         <xsl:with-param name="anchor">doc-panel</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Documentation</xsl:with-param>
+         <xsl:with-param name="contents">
+            <xsl:call-template name="PrintAnnotation">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="containsCode">false</xsl:with-param>
       </xsl:call-template>
    </xsl:template>
 
@@ -3135,28 +2161,60 @@ div#legend div.hint {
      notation declaration.
      -->
    <xsl:template match="xsd:notation" mode="properties">
-      <table class="properties">
-         <!-- Name -->
-         <tr>
-            <th>Name</th>
-            <td><xsl:value-of select="@name"/></td>
-         </tr>
-         <!-- Public Identifier -->
-         <tr>
-            <th>Public Identifier</th>
-            <td><xsl:value-of select="@public"/></td>
-         </tr>
-         <!-- System Identifier -->
-         <xsl:if test="@system">
-            <tr>
-               <th>System Identifier</th>
-               <td><xsl:value-of select="@system"/></td>
-            </tr>
-         </xsl:if>
-      </table>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_PROPERTIES"/>
+         <xsl:with-param name="anchor">properties-table</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Properties</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Name -->
+                  <tr>
+                     <th>Name</th>
+                     <td><xsl:value-of select="@name"/></td>
+                  </tr>
+                  <!-- Public Identifier -->
+                  <tr>
+                     <th>Public Identifier</th>
+                     <td><xsl:value-of select="@public"/></td>
+                  </tr>
+                  <!-- System Identifier -->
+                  <xsl:if test="@system">
+                     <tr>
+                        <th>System Identifier</th>
+                        <td><xsl:value-of select="@system"/></td>
+                     </tr>
+                  </xsl:if>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
       <!-- Annotation -->
-      <xsl:call-template name="PrintAnnotation">
-         <xsl:with-param name="component" select="."/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_DOCUMENTATION"/>
+         <xsl:with-param name="anchor">doc-panel</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Documentation</xsl:with-param>
+         <xsl:with-param name="contents">
+            <xsl:call-template name="PrintAnnotation">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="containsCode">false</xsl:with-param>
       </xsl:call-template>
    </xsl:template>
 
@@ -3165,136 +2223,168 @@ div#legend div.hint {
      schema element.
      -->
    <xsl:template match="xsd:schema" mode="properties">
-      <table class="properties">
-         <!-- Target Namespace -->
-         <tr>
-            <th>
-               <xsl:call-template name="PrintGlossaryTermRef">
-                  <xsl:with-param name="code">TargetNS</xsl:with-param>
-                  <xsl:with-param name="term">Target Namespace</xsl:with-param>
-               </xsl:call-template>
-            </th>
-            <td>
-               <xsl:choose>
-                  <xsl:when test="@targetNamespace">
-                     <span class="targetNS">
-                        <xsl:value-of select="@targetNamespace"/>
-                     </span>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:text>None</xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </td>
-         </tr>
-         <!-- Version -->
-         <xsl:if test="@version">
-            <tr>
-               <th>Version</th>
-               <td><xsl:value-of select="@version"/></td>
-            </tr>
-         </xsl:if>
-         <!-- Language -->
-         <xsl:if test="@xml:lang">
-            <tr>
-               <th>Language</th>
-               <td><xsl:value-of select="@xml:lang"/></td>
-            </tr>
-         </xsl:if>
-         <!-- Element/Attribute Form Defaults -->
-         <tr>
-            <th>Element and Attribute Namespaces</th>
-            <td>
-               <ul>
-                  <li>Global element and attribute declarations belong to this schema's target namespace.</li>
-                  <li>
-                     <xsl:choose>
-                        <xsl:when test="normalize-space(@elementFormDefault)='qualified'">
-                           <xsl:text>By default, local element declarations belong to this schema's target namespace.</xsl:text>
-                        </xsl:when>
-                        <xsl:otherwise>
-                           <xsl:text>By default, local element declarations have no namespace.</xsl:text>
-                        </xsl:otherwise>
-                     </xsl:choose>
-                  </li>
-                  <li>
-                     <xsl:choose>
-                        <xsl:when test="normalize-space(@attributeFormDefault)='qualified'">
-                           <xsl:text>By default, local attribute declarations belong to this schema's target namespace.</xsl:text>
-                        </xsl:when>
-                        <xsl:otherwise>
-                           <xsl:text>By default, local attribute declarations have no namespace.</xsl:text>
-                        </xsl:otherwise>
-                     </xsl:choose>
-                  </li>
-               </ul>
-            </td>
-         </tr>
-         <!-- Schema Composition, e.g. include, import, redefine -->
-         <xsl:if test="xsd:include or xsd:import or xsd:redefine">
-            <tr>
-               <th>Schema Composition</th>
-               <td>
-                  <ul>
-                     <!-- Import -->
-                     <xsl:if test="xsd:import">
-                        <li>
-                           <xsl:text>This schema imports schema(s) from the following namespace(s):</xsl:text>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_PROPERTIES"/>
+         <xsl:with-param name="anchor">properties-table</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Properties</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Target Namespace -->
+                  <tr>
+                     <th>
+                        <xsl:call-template name="PrintGlossaryTermRef">
+                           <xsl:with-param name="code">TargetNS</xsl:with-param>
+                           <xsl:with-param name="term">Target Namespace</xsl:with-param>
+                        </xsl:call-template>
+                     </th>
+                     <td>
+                        <xsl:choose>
+                           <xsl:when test="@targetNamespace">
+                              <span class="targetNS">
+                                 <xsl:value-of select="@targetNamespace"/>
+                              </span>
+                           </xsl:when>
+                           <xsl:otherwise>
+                              <xsl:text>None</xsl:text>
+                           </xsl:otherwise>
+                        </xsl:choose>
+                     </td>
+                  </tr>
+                  <!-- Version -->
+                  <xsl:if test="@version">
+                     <tr>
+                        <th>Version</th>
+                        <td><xsl:value-of select="@version"/></td>
+                     </tr>
+                  </xsl:if>
+                  <!-- Language -->
+                  <xsl:if test="@xml:lang">
+                     <tr>
+                        <th>Language</th>
+                        <td><xsl:value-of select="@xml:lang"/></td>
+                     </tr>
+                  </xsl:if>
+                  <!-- Element/Attribute Form Defaults -->
+                  <tr>
+                     <th>Element and Attribute Namespaces</th>
+                     <td>
+                        <ul>
+                           <li>Global element and attribute declarations belong to this schema's target namespace.</li>
+                           <li>
+                              <xsl:choose>
+                                 <xsl:when test="normalize-space(@elementFormDefault)='qualified'">
+                                    <xsl:text>By default, local element declarations belong to this schema's target namespace.</xsl:text>
+                                 </xsl:when>
+                                 <xsl:otherwise>
+                                    <xsl:text>By default, local element declarations have no namespace.</xsl:text>
+                                 </xsl:otherwise>
+                              </xsl:choose>
+                           </li>
+                           <li>
+                              <xsl:choose>
+                                 <xsl:when test="normalize-space(@attributeFormDefault)='qualified'">
+                                    <xsl:text>By default, local attribute declarations belong to this schema's target namespace.</xsl:text>
+                                 </xsl:when>
+                                 <xsl:otherwise>
+                                    <xsl:text>By default, local attribute declarations have no namespace.</xsl:text>
+                                 </xsl:otherwise>
+                              </xsl:choose>
+                           </li>
+                        </ul>
+                     </td>
+                  </tr>
+                  <!-- Schema Composition, e.g. include, import, redefine -->
+                  <xsl:if test="xsd:include or xsd:import or xsd:redefine">
+                     <tr>
+                        <th>Schema Composition</th>
+                        <td>
                            <ul>
-                           <xsl:for-each select="xsd:import">
-                              <li>
-                                 <em><xsl:value-of select="@namespace"/></em>
-                                 <xsl:if test="@schemaLocation">
-                                    <xsl:text> (at </xsl:text>
-                                    <xsl:call-template name="PrintSchemaLink">
-                                       <xsl:with-param name="uri" select="@schemaLocation"/>
-                                    </xsl:call-template>
-                                    <xsl:text>)</xsl:text>
-                                 </xsl:if>
-                              </li>
-                           </xsl:for-each>
-                           </ul>
-                        </li>
-                     </xsl:if>
-                     <!-- Include -->
-                     <xsl:if test="xsd:include">
-                        <li>
-                           <xsl:text>This schema includes components from the following schema document(s):</xsl:text>
-                           <ul>
-                           <xsl:for-each select="xsd:include">
-                              <li>
-                                 <xsl:call-template name="PrintSchemaLink">
-                                    <xsl:with-param name="uri" select="@schemaLocation"/>
-                                 </xsl:call-template>
-                              </li>
-                           </xsl:for-each>
-                           </ul>
-                        </li>
-                     </xsl:if>
-                     <!-- Redefine -->
-                     <xsl:if test="xsd:redefine">
-                        <li>
-                           <xsl:text>This schema includes components from the following schema document(s), where some of the components have been redefined:</xsl:text>
-                           <ul>
-                              <xsl:for-each select="xsd:redefine">
+                              <!-- Import -->
+                              <xsl:if test="xsd:import">
                                  <li>
-                                 <xsl:call-template name="PrintSchemaLink">
-                                    <xsl:with-param name="uri" select="@schemaLocation"/>
-                                 </xsl:call-template>
+                                    <xsl:text>This schema imports schema(s) from the following namespace(s):</xsl:text>
+                                    <ul>
+                                    <xsl:for-each select="xsd:import">
+                                       <li>
+                                          <em><xsl:value-of select="@namespace"/></em>
+                                          <xsl:if test="@schemaLocation">
+                                             <xsl:text> (at </xsl:text>
+                                             <xsl:call-template name="PrintSchemaLink">
+                                                <xsl:with-param name="uri" select="@schemaLocation"/>
+                                             </xsl:call-template>
+                                             <xsl:text>)</xsl:text>
+                                          </xsl:if>
+                                       </li>
+                                    </xsl:for-each>
+                                    </ul>
                                  </li>
-                              </xsl:for-each>
+                              </xsl:if>
+                              <!-- Include -->
+                              <xsl:if test="xsd:include">
+                                 <li>
+                                    <xsl:text>This schema includes components from the following schema document(s):</xsl:text>
+                                    <ul>
+                                    <xsl:for-each select="xsd:include">
+                                       <li>
+                                          <xsl:call-template name="PrintSchemaLink">
+                                             <xsl:with-param name="uri" select="@schemaLocation"/>
+                                          </xsl:call-template>
+                                       </li>
+                                    </xsl:for-each>
+                                    </ul>
+                                 </li>
+                              </xsl:if>
+                              <!-- Redefine -->
+                              <xsl:if test="xsd:redefine">
+                                 <li>
+                                    <xsl:text>This schema includes components from the following schema document(s), where some of the components have been redefined:</xsl:text>
+                                    <ul>
+                                       <xsl:for-each select="xsd:redefine">
+                                          <li>
+                                          <xsl:call-template name="PrintSchemaLink">
+                                             <xsl:with-param name="uri" select="@schemaLocation"/>
+                                          </xsl:call-template>
+                                          </li>
+                                       </xsl:for-each>
+                                    </ul>
+                                 <xsl:text>See </xsl:text><a href="#Redefinitions">Redefined Schema Components</a><xsl:text> section.</xsl:text>
+                                 </li>
+                              </xsl:if>
                            </ul>
-                        <xsl:text>See </xsl:text><a href="#Redefinitions">Redefined Schema Components</a><xsl:text> section.</xsl:text>
-                        </li>
-                     </xsl:if>
-                  </ul>
-               </td>
-            </tr>
-         </xsl:if>
-      </table>
+                        </td>
+                     </tr>
+                  </xsl:if>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
       <!-- Annotation -->
-      <xsl:call-template name="PrintAnnotation">
-         <xsl:with-param name="component" select="."/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_DOCUMENTATION"/>
+         <xsl:with-param name="anchor">doc-panel</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Documentation</xsl:with-param>
+         <xsl:with-param name="contents">
+            <xsl:call-template name="PrintAnnotation">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="containsCode">false</xsl:with-param>
       </xsl:call-template>
    </xsl:template>
 
@@ -3303,51 +2393,83 @@ div#legend div.hint {
      simple type definition.
      -->
    <xsl:template match="xsd:simpleType" mode="properties">
-      <table class="properties">
-         <!-- Name -->
-         <tr>
-            <th>Name</th>
-            <td><xsl:value-of select="@name"/></td>
-         </tr>
-         <!-- Constraints -->
-         <tr>
-            <th>Content</th>
-            <td>
-               <xsl:call-template name="PrintSimpleConstraints">
-                  <xsl:with-param name="simpleContent" select="."/>
-               </xsl:call-template>
-            </td>
-         </tr>
-         <!-- Final -->
-         <xsl:variable name="final">
-            <xsl:call-template name="PrintSimpleDerivationSet">
-               <xsl:with-param name="EBV">
-                  <xsl:choose>
-                     <xsl:when test="@final">
-                        <xsl:value-of select="@final"/>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:value-of select="/xsd:schema/@finalDefault"/>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </xsl:with-param>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
             </xsl:call-template>
-         </xsl:variable>
-         <xsl:if test="normalize-space($final)!=''">
-            <tr>
-               <th>
-                  <xsl:call-template name="PrintGlossaryTermRef">
-                     <xsl:with-param name="code">TypeFinal</xsl:with-param>
-                     <xsl:with-param name="term">Prohibited Derivations</xsl:with-param>
-                  </xsl:call-template>
-               </th>
-               <td><xsl:value-of select="$final"/></td>
-            </tr>
-         </xsl:if>
-      </table>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_PROPERTIES"/>
+         <xsl:with-param name="anchor">properties-table</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Properties</xsl:with-param>
+         <xsl:with-param name="contents">
+            <table class="table table-striped xs3p-in-panel-table">
+               <tbody>
+                  <!-- Name -->
+                  <tr>
+                     <th>Name</th>
+                     <td><xsl:value-of select="@name"/></td>
+                  </tr>
+                  <!-- Constraints -->
+                  <tr>
+                     <th>Content</th>
+                     <td>
+                        <xsl:call-template name="PrintSimpleConstraints">
+                           <xsl:with-param name="simpleContent" select="."/>
+                        </xsl:call-template>
+                     </td>
+                  </tr>
+                  <!-- Final -->
+                  <xsl:variable name="final">
+                     <xsl:call-template name="PrintSimpleDerivationSet">
+                        <xsl:with-param name="EBV">
+                           <xsl:choose>
+                              <xsl:when test="@final">
+                                 <xsl:value-of select="@final"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                 <xsl:value-of select="/xsd:schema/@finalDefault"/>
+                              </xsl:otherwise>
+                           </xsl:choose>
+                        </xsl:with-param>
+                     </xsl:call-template>
+                  </xsl:variable>
+                  <xsl:if test="normalize-space($final)!=''">
+                     <tr>
+                        <th>
+                           <xsl:call-template name="PrintGlossaryTermRef">
+                              <xsl:with-param name="code">TypeFinal</xsl:with-param>
+                              <xsl:with-param name="term">Prohibited Derivations</xsl:with-param>
+                           </xsl:call-template>
+                        </th>
+                        <td><xsl:value-of select="$final"/></td>
+                     </tr>
+                  </xsl:if>
+               </tbody>
+            </table>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="omitPanelContainer">true</xsl:with-param>
+      </xsl:call-template>
       <!-- Annotation -->
-      <xsl:call-template name="PrintAnnotation">
-         <xsl:with-param name="component" select="."/>
+      <xsl:call-template name="CollapseableBox">
+         <xsl:with-param name="id">
+            <xsl:call-template name="GetComponentID">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="help" select="$HELP_DOCUMENTATION"/>
+         <xsl:with-param name="anchor">doc-panel</xsl:with-param>
+         <xsl:with-param name="styleClass">sample</xsl:with-param>
+         <xsl:with-param name="caption">Documentation</xsl:with-param>
+         <xsl:with-param name="contents">
+            <xsl:call-template name="PrintAnnotation">
+               <xsl:with-param name="component" select="."/>
+            </xsl:call-template>
+         </xsl:with-param>
+         <xsl:with-param name="isOpened">true</xsl:with-param>
+         <xsl:with-param name="containsCode">false</xsl:with-param>
       </xsl:call-template>
    </xsl:template>
 
@@ -3361,18 +2483,61 @@ div#legend div.hint {
      -->
    <xsl:template match="text()" mode="hiddendoc"/>
 
+   <xsl:template match="xsd:element | xsd:attribute | xsd:simpleType" mode="hiddendoc">
+      <xsl:if test="./xsd:annotation/xsd:documentation">
+         <xsl:variable name="documentation">
+            <xsl:for-each select="./xsd:annotation/xsd:documentation">
+               <xsl:if test="position()!=1">
+                  <xsl:text>,</xsl:text>
+               </xsl:if>
+               <xsl:value-of select="generate-id(.)"/>
+            </xsl:for-each>
+         </xsl:variable>
+         <div class="modal fade {./@name}" id="{$documentation}-popup" tabindex="-1" role="dialog" aria-hidden="true">
+           <div class="modal-dialog unpre">
+             <div class="modal-content">
+               <div class="modal-header">
+                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&#215;</button>
+                 <h4 class="modal-title" id="{$documentation}-label">
+                   <xsl:call-template name="GetComponentDescription">
+                      <xsl:with-param name="component" select="."/>
+                   </xsl:call-template>
+                   <xsl:text> </xsl:text>
+                   <xsl:choose>
+                      <xsl:when test="./@name">
+                         <xsl:value-of select="./@name"/>
+                      </xsl:when>
+                      <xsl:when test="./@ref">
+                         <xsl:call-template name="GetRefName">
+                            <xsl:with-param name="ref" select="./@ref"/>
+                         </xsl:call-template>
+                      </xsl:when>
+                   </xsl:choose>
+                 </h4>
+               </div>
+               <div class="modal-body">
+                 <xsl:call-template name="PrintAnnotation">
+                    <xsl:with-param name="component" select="."/>
+                    <xsl:with-param name="hidden" select="'true'"/>
+                 </xsl:call-template>
+               </div>
+               <div class="modal-footer">
+                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+               </div>
+             </div>
+           </div>
+         </div>
+      </xsl:if>
+   </xsl:template>
+
    <!--
      Print hidden documentation blocks for each documented element.
+     Generates pop-up divs for 'annotation' elements, if required.
+        Param(s):
+            component (Node) required
+                Schema component
      -->
    <xsl:template match="*" mode="hiddendoc">
-      <xsl:if test="./xsd:annotation/xsd:documentation">
-         <xsl:for-each select="./xsd:annotation/xsd:documentation">
-            <xsl:if test="position()!=1"><br/><br/></xsl:if>
-            <div class="annotation documentation hidden" id="hdoc_{generate-id(.)}">
-               <xsl:apply-templates select="."/>
-            </div>
-         </xsl:for-each>
-      </xsl:if>
       <xsl:apply-templates select="child::node()" mode="hiddendoc"/>
    </xsl:template>
 
@@ -3384,29 +2549,33 @@ div#legend div.hint {
      -->
    <xsl:template name="PrintAnnotation">
       <xsl:param name="component"/>
+      <xsl:param name="hidden">false</xsl:param>
+      <xsl:variable name="suffix">
+         <xsl:if test="$hidden!='false'">-hidden</xsl:if>
+      </xsl:variable>
 
       <xsl:if test="$component/xsd:annotation/xsd:documentation">
          <xsl:for-each select="$component/xsd:annotation/xsd:documentation">
             <xsl:if test="position()!=1"><br/><br/></xsl:if>
-            <div class="annotation documentation" id="wdoc_{generate-id(.)}">
-               <xsl:text>Javascript required.</xsl:text>
+            <div class="annotation documentation" id="wdoc-{generate-id(.)}{$suffix}">
+               <div class="hidden" id="{generate-id(.)}{$suffix}-doc-raw">
+                  <xsl:value-of select="text()"/>
+                  <xsl:if test="./@source">
+                     Linked documentation: <xsl:value-of select="./@source"/>
+                  </xsl:if>
+               </div>
+               <div class="xs3p-doc" id="{generate-id(.)}{$suffix}-doc"><xsl:text> </xsl:text></div>
             </div>
-            <script type="text/javascript">
-               var block = document.getElementById("wdoc_<xsl:value-of select="generate-id(.)"/>");
-               var hblock = document.getElementById("hdoc_<xsl:value-of select="generate-id(.)"/>");
-               var content = hblock.childNodes[0].nodeValue;
-               block.innerHTML = '';
-               creole.parse(block, content);
-            </script>
          </xsl:for-each>
       </xsl:if>
       <xsl:if test="$component/xsd:annotation/xsd:appinfo">
          <div class="annotation appinfo">
-            <h3>Application Data</h3>
+            <h4>Application Data</h4>
             <xsl:for-each select="$component/xsd:annotation/xsd:appinfo">
                <xsl:if test="position()!=1"><br/><br/></xsl:if>
                <xsl:apply-templates select="." mode="properties"/>
             </xsl:for-each>
+            <br/>
          </div>
       </xsl:if>
    </xsl:template>
@@ -3510,16 +2679,14 @@ div#legend div.hint {
       <xsl:choose>
          <!-- Circular type hierarchy -->
          <xsl:when test="$typeName != '' and contains($typeList, concat('*', $typeName, '+'))">
-            <li>
-               <xsl:call-template name="HandleError">
-                  <xsl:with-param name="isTerminating">false</xsl:with-param>
-                  <xsl:with-param name="errorMsg">
-                     <xsl:text>Circular type reference to '</xsl:text>
-                     <xsl:value-of select="$typeName"/>
-                     <xsl:text>' in type hierarchy.</xsl:text>
-                  </xsl:with-param>
-               </xsl:call-template>
-            </li>
+            <xsl:call-template name="HandleError">
+               <xsl:with-param name="isTerminating">false</xsl:with-param>
+               <xsl:with-param name="errorMsg">
+                  <xsl:text>Circular type reference to '</xsl:text>
+                  <xsl:value-of select="$typeName"/>
+                  <xsl:text>' in type hierarchy.</xsl:text>
+               </xsl:with-param>
+            </xsl:call-template>
          </xsl:when>
          <!-- Locally-defined base type -->
          <xsl:when test="$restriction/xsd:simpleType">
@@ -3689,7 +2856,9 @@ div#legend div.hint {
          </xsl:variable>
 
          <xsl:call-template name="CollapseableBox">
-            <xsl:with-param name="id" select="concat($componentID, '_xibox')"/>
+            <xsl:with-param name="id" select="$componentID"/>
+            <xsl:with-param name="help" select="$HELP_INSTANCE"/>
+            <xsl:with-param name="anchor">instance-table</xsl:with-param>
             <xsl:with-param name="styleClass">sample</xsl:with-param>
             <xsl:with-param name="caption">XML Instance Representation</xsl:with-param>
             <xsl:with-param name="contents">
@@ -3770,20 +2939,19 @@ div#legend div.hint {
    <xsl:template match="xsd:any | xsd:anyAttribute" mode="sample">
       <xsl:param name="margin">0</xsl:param>
 
-      <div class="other" style="margin-left: {$margin}em">
-         <xsl:call-template name="PrintWildcard">
-            <xsl:with-param name="componentType">
-               <xsl:choose>
-                  <xsl:when test="local-name(.)='anyAttribute'">attribute</xsl:when>
-                  <xsl:otherwise>element</xsl:otherwise>
-               </xsl:choose>
-            </xsl:with-param>
-            <xsl:with-param name="namespace" select="@namespace"/>
-            <xsl:with-param name="processContents" select="@processContents"/>
-            <xsl:with-param name="minOccurs" select="@minOccurs"/>
-            <xsl:with-param name="maxOccurs" select="@maxOccurs"/>
-         </xsl:call-template>
-      </div>
+      <xsl:call-template name="PrintWildcard">
+         <xsl:with-param name="componentType">
+            <xsl:choose>
+               <xsl:when test="local-name(.)='anyAttribute'">attribute</xsl:when>
+               <xsl:otherwise>element</xsl:otherwise>
+            </xsl:choose>
+         </xsl:with-param>
+         <xsl:with-param name="namespace" select="@namespace"/>
+         <xsl:with-param name="processContents" select="@processContents"/>
+         <xsl:with-param name="minOccurs" select="@minOccurs"/>
+         <xsl:with-param name="maxOccurs" select="@maxOccurs"/>
+         <xsl:with-param name="margin" select="number($margin)"/>
+      </xsl:call-template>
    </xsl:template>
 
    <!--
@@ -3832,9 +3000,16 @@ div#legend div.hint {
             <!-- IGNORE: Attribute is prohibited. -->
          </xsl:when>
          <xsl:otherwise>
-            <xsl:if test="$addBR!='false'"><br/></xsl:if>
+            <!--<xsl:if test="$addBR!='false'"><xsl:text>&#xa;</xsl:text></xsl:if>-->
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content">
+                  <xsl:text> </xsl:text>
+               </xsl:with-param>
+               <xsl:with-param name="count" select="$margin"/>
+            </xsl:call-template>
 
-            <span style="margin-left: {$margin}em">
+            <span class="na">
+<!-- TODO: port to re-design
                <xsl:choose>
                   <xsl:when test="$isNewField!='false'">
                      <xsl:attribute name="class">newFields</xsl:attribute>
@@ -3842,9 +3017,9 @@ div#legend div.hint {
                   <xsl:when test="$isInherited!='false'">
                      <xsl:attribute name="class">inherited</xsl:attribute>
                   </xsl:when>
-               </xsl:choose>
+               </xsl:choose>-->
 
-               <xsl:text> </xsl:text>
+               <!--<xsl:text> </xsl:text>-->
                <xsl:variable name="prefix">
                   <xsl:call-template name="GetAttributePrefix">
                      <xsl:with-param name="attribute" select="."/>
@@ -3855,7 +3030,10 @@ div#legend div.hint {
                   <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
                </xsl:call-template>
                <xsl:value-of select="@name"/>
-               <xsl:text>="</xsl:text>
+               <xsl:text>=</xsl:text>
+            </span>
+            <span class="s">
+               <xsl:text>"</xsl:text>
 
                <xsl:choose>
                   <!-- Fixed value is provided -->
@@ -3881,23 +3059,24 @@ div#legend div.hint {
                      <span class="type">anySimpleType</span>
                   </xsl:otherwise>
                </xsl:choose>
-
-               <!-- Don't print occurrence info and documentation
-                    for global attributes. -->
-               <xsl:if test="local-name(..)!='schema'">
-                  <!-- Occurrence info-->
-                  <xsl:text> </xsl:text>
-                  <xsl:call-template name="PrintOccurs">
-                     <xsl:with-param name="component" select="."/>
-                  </xsl:call-template>
-                  <!-- Documentation -->
-                  <xsl:call-template name="PrintSampleDocumentation">
-                     <xsl:with-param name="component" select="."/>
-                  </xsl:call-template>
-               </xsl:if>
-
                <xsl:text>"</xsl:text>
             </span>
+
+            <!-- Don't print occurrence info and documentation
+                 for global attributes. -->
+            <xsl:if test="local-name(..)!='schema'">
+               <!-- Occurrence info-->
+               <xsl:text> </xsl:text>
+               <xsl:call-template name="PrintOccurs">
+                  <xsl:with-param name="component" select="."/>
+               </xsl:call-template>
+               <!-- Documentation -->
+               <xsl:call-template name="PrintSampleDocumentation">
+                  <xsl:with-param name="component" select="."/>
+               </xsl:call-template>
+            </xsl:if>
+
+            <xsl:text>&#xa;</xsl:text>
          </xsl:otherwise>
       </xsl:choose>
    </xsl:template>
@@ -3955,24 +3134,29 @@ div#legend div.hint {
             <!-- IGNORE: Attribute is prohibited. -->
          </xsl:when>
          <xsl:otherwise>
-            <xsl:if test="$addBR!='false'"><br/></xsl:if>
+            <!--<xsl:if test="$addBR!='false'"><xsl:text>&#xa;</xsl:text></xsl:if>-->
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+               <xsl:with-param name="count" select="$margin"/>
+            </xsl:call-template>
+            <xsl:choose>
+               <xsl:when test="$isNewField!='false'">
+                  <xsl:attribute name="class">newFields</xsl:attribute>
+               </xsl:when>
+               <xsl:when test="$isInherited!='false'">
+                  <xsl:attribute name="class">inherited</xsl:attribute>
+               </xsl:when>
+            </xsl:choose>
 
-            <span style="margin-left: {$margin}em">
-               <xsl:choose>
-                  <xsl:when test="$isNewField!='false'">
-                     <xsl:attribute name="class">newFields</xsl:attribute>
-                  </xsl:when>
-                  <xsl:when test="$isInherited!='false'">
-                     <xsl:attribute name="class">inherited</xsl:attribute>
-                  </xsl:when>
-               </xsl:choose>
-
-               <xsl:text> </xsl:text>
+            <span class="na">
                <xsl:call-template name="PrintAttributeRef">
                   <xsl:with-param name="ref" select="@ref"/>
                   <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
                </xsl:call-template>
-               <xsl:text>="</xsl:text>
+               <xsl:text>=</xsl:text>
+            </span>
+            <span class="s">
+               <xsl:text>"</xsl:text>
                <!-- Fixed value is provided -->
                <xsl:if test="@fixed">
                   <span class="fixed">
@@ -3980,6 +3164,7 @@ div#legend div.hint {
                   </span>
                   <xsl:text> </xsl:text>
                </xsl:if>
+               <xsl:text>" </xsl:text>
                <!-- Print occurs info-->
                <xsl:call-template name="PrintOccurs">
                   <xsl:with-param name="component" select="."/>
@@ -3988,9 +3173,8 @@ div#legend div.hint {
                <xsl:call-template name="PrintSampleDocumentation">
                   <xsl:with-param name="component" select="."/>
                </xsl:call-template>
-
-               <xsl:text>"</xsl:text>
             </span>
+            <xsl:text>&#xa;</xsl:text>
          </xsl:otherwise>
       </xsl:choose>
    </xsl:template>
@@ -4163,9 +3347,17 @@ div#legend div.hint {
       <xsl:param name="schemaLoc">this</xsl:param>
       <xsl:param name="typeList"/>
 
+      <xsl:variable name="typeHierarchy">
+         <xsl:value-of select="$typeList"/>
+      </xsl:variable>
+
       <xsl:if test="normalize-space(@maxOccurs)!='0'">
          <!-- Header -->
-         <span class="group" style="margin-left: {$margin}em">
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="$margin"/>
+         </xsl:call-template>
+         <span class="group">
             <xsl:text>Start </xsl:text>
             <xsl:call-template name="PrintGlossaryTermRef">
                <xsl:with-param name="code">Choice</xsl:with-param>
@@ -4180,7 +3372,8 @@ div#legend div.hint {
             <xsl:call-template name="PrintSampleDocumentation">
                <xsl:with-param name="component" select="."/>
             </xsl:call-template>
-         </span><br/>
+         </span>
+         <xsl:text>&#xa;</xsl:text>
 
          <!-- Content -->
          <xsl:apply-templates select="xsd:*" mode="sample">
@@ -4193,9 +3386,14 @@ div#legend div.hint {
          </xsl:apply-templates>
 
          <!-- Footer -->
-         <span class="group" style="margin-left: {$margin}em">
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="$margin"/>
+         </xsl:call-template>
+         <span class="group">
             <xsl:text>End Choice</xsl:text>
-         </span><br/>
+         </span>
+         <xsl:text>&#xa;</xsl:text>
       </xsl:if>
    </xsl:template>
 
@@ -4454,7 +3652,11 @@ div#legend div.hint {
          <!-- Circular group definition -->
          <xsl:when test="contains($parentGroups, concat('*', normalize-space($grpName), '+'))">
             <!-- Don't show contents -->
-            <div class="other" style="margin-left: {$margin}em">
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+               <xsl:with-param name="count" select="$margin"/>
+            </xsl:call-template>
+            <span class="c">
                <xsl:text>Circular model group reference: </xsl:text>
                <xsl:copy-of select="$grpLink"/>
                <!-- Occurrence info -->
@@ -4464,7 +3666,8 @@ div#legend div.hint {
                <xsl:call-template name="PrintSampleDocumentation">
                   <xsl:with-param name="component" select="."/>
                </xsl:call-template>
-            </div>
+            </span>
+            <xsl:text>&#xa;</xsl:text>
          </xsl:when>
          <xsl:otherwise>
             <!-- Look for group definition -->
@@ -4567,7 +3770,11 @@ div#legend div.hint {
          <!-- Header -->
          <xsl:if test="normalize-space($occursInfo)!='[1]'">
             <!-- Don't display header if min/max occurs is one. -->
-            <span class="group" style="margin-left: {$margin}em">
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+               <xsl:with-param name="count" select="$margin"/>
+            </xsl:call-template>
+            <span class="group">
                <xsl:text>Start </xsl:text>
                <xsl:call-template name="PrintGlossaryTermRef">
                   <xsl:with-param name="code">Sequence</xsl:with-param>
@@ -4580,7 +3787,8 @@ div#legend div.hint {
                <xsl:call-template name="PrintSampleDocumentation">
                   <xsl:with-param name="component" select="."/>
                </xsl:call-template>
-            </span><br/>
+            </span>
+            <xsl:text>&#xa;</xsl:text>
          </xsl:if>
 
          <xsl:apply-templates select="xsd:*" mode="sample">
@@ -4604,9 +3812,14 @@ div#legend div.hint {
          <!-- Footer -->
          <xsl:if test="normalize-space($occursInfo)!='[1]'">
             <!-- Don't display footer if min/max occurs is one. -->
-            <span class="group" style="margin-left: {$margin}em">
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+               <xsl:with-param name="count" select="$margin"/>
+            </xsl:call-template>
+            <span class="group">
                <xsl:text>End Sequence</xsl:text>
-            </span><br/>
+            </span>
+            <xsl:text>&#xa;</xsl:text>
          </xsl:if>
       </xsl:if>
    </xsl:template>
@@ -4664,9 +3877,18 @@ div#legend div.hint {
       <xsl:param name="margin">0</xsl:param>
       <xsl:param name="schemaLoc">this</xsl:param>
 
-      <div class="other" style="margin-left: {$margin}em">
-         <xsl:text>&lt;!-- </xsl:text><br/>
 
+      <xsl:call-template name="Repeat">
+         <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+         <xsl:with-param name="count" select="$margin"/>
+      </xsl:call-template>
+      <span class="c">
+         <xsl:text>&lt;!--&#xa;</xsl:text>
+
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="number($margin) + number($ATTR_INDENT)"/>
+         </xsl:call-template>
          <xsl:choose>
             <xsl:when test="local-name(.)='unique'">
                <xsl:call-template name="PrintGlossaryTermRef">
@@ -4699,16 +3921,26 @@ div#legend div.hint {
                         <xsl:with-param name="component" select="."/>
                      </xsl:call-template>
                   </xsl:variable>
-                  <a name="{$componentID}"><xsl:value-of select="@name"/></a>
+                  <a id="{$componentID}"><xsl:value-of select="@name"/></a>
                </xsl:otherwise>
             </xsl:choose>
-         </strong><br/>
+         </strong>
+         <xsl:text>&#xa;</xsl:text>
 
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="number($margin) + number($ATTR_INDENT)"/>
+         </xsl:call-template>
          <xsl:text>Selector - </xsl:text>
          <strong>
             <xsl:value-of select="xsd:selector/@xpath"/>
-         </strong><br/>
+         </strong>
+         <xsl:text>&#xa;</xsl:text>
 
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="number($margin) + number($ATTR_INDENT)"/>
+         </xsl:call-template>
          <xsl:text>Field(s) - </xsl:text>
          <xsl:for-each select="xsd:field">
             <xsl:if test="position()!=1">
@@ -4718,19 +3950,27 @@ div#legend div.hint {
                <xsl:value-of select="@xpath"/>
             </strong>
          </xsl:for-each>
-         <br/>
+         <xsl:text>&#xa;</xsl:text>
 
          <xsl:if test="local-name(.)='keyref'">
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+               <xsl:with-param name="count" select="number($margin) + number($ATTR_INDENT)"/>
+            </xsl:call-template>
             <xsl:text>Refers to - </xsl:text>
             <xsl:call-template name="PrintKeyRef">
                <xsl:with-param name="ref" select="@refer"/>
                <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
             </xsl:call-template>
-            <br/>
+            <xsl:text>&#xa;</xsl:text>
          </xsl:if>
 
-         <xsl:text>--></xsl:text>
-      </div>
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="$margin"/>
+         </xsl:call-template>
+         <xsl:text>-->&#xa;</xsl:text>
+      </span>
    </xsl:template>
 
    <!--
@@ -4748,43 +3988,18 @@ div#legend div.hint {
    <xsl:template name="PrintSampleDocumentation">
       <xsl:param name="component"/>
 
-      <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true' and $component and $component/xsd:annotation/xsd:documentation">
+      <xsl:if test="$component and $component/xsd:annotation/xsd:documentation">
          <xsl:variable name="documentation">
             <xsl:for-each select="$component/xsd:annotation/xsd:documentation">
                <xsl:if test="position()!=1">
                   <xsl:text>,</xsl:text>
                </xsl:if>
-               <xsl:text>'</xsl:text>
                <xsl:value-of select="generate-id(.)"/>
-               <xsl:text>'</xsl:text>
             </xsl:for-each>
          </xsl:variable>
 
          <xsl:text> </xsl:text>
-         <a href="javascript:void(0)" title="View Documentation" class="documentation">
-            <!-- onclick attribute -->
-            <xsl:attribute name="onclick">
-               <xsl:text>docArray = new Array(</xsl:text>
-               <xsl:value-of select="$documentation"/>
-               <xsl:text>); viewDocumentation('</xsl:text>
-               <xsl:call-template name="GetComponentDescription">
-                  <xsl:with-param name="component" select="$component"/>
-               </xsl:call-template>
-               <xsl:text>', '</xsl:text>
-               <xsl:choose>
-                  <xsl:when test="$component/@name">
-                     <xsl:value-of select="$component/@name"/>
-                  </xsl:when>
-                  <xsl:when test="$component/@ref">
-                     <xsl:call-template name="GetRefName">
-                        <xsl:with-param name="ref" select="$component/@ref"/>
-                     </xsl:call-template>
-                  </xsl:when>
-               </xsl:choose>
-               <xsl:text>', docArray);</xsl:text>
-            </xsl:attribute>
-            <xsl:text>?</xsl:text>
-         </a>
+         <button title="Show documentation for {$component/@name}" class="btn btn-link btn-doc" data-toggle="modal" data-target="#{$documentation}-popup"><span class="glyphicon glyphicon-info-sign"><xsl:text> </xsl:text></span></button>
       </xsl:if>
    </xsl:template>
 
@@ -4866,7 +4081,11 @@ div#legend div.hint {
       <!-- Header -->
       <xsl:if test="normalize-space($occursInfo)!='[1]'">
          <!-- Don't print out header if min/max occurs is one. -->
-         <span class="group" style="margin-left: {$margin}em">
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="$margin"/>
+         </xsl:call-template>
+         <span class="group">
             <xsl:text>Start Group: </xsl:text>
             <xsl:copy-of select="$grpLink"/>
             <!-- Occurrence info -->
@@ -4876,7 +4095,8 @@ div#legend div.hint {
             <xsl:call-template name="PrintSampleDocumentation">
                <xsl:with-param name="component" select="$grpRef"/>
             </xsl:call-template>
-         </span><br/>
+         </span>
+         <xsl:text>&#xa;</xsl:text>
       </xsl:if>
 
       <!-- Content -->
@@ -4901,10 +4121,15 @@ div#legend div.hint {
       <!-- Footer -->
       <xsl:if test="normalize-space($occursInfo)!='[1]'">
          <!-- Don't print out footer if min/max occurs is one. -->
-         <span class="group" style="margin-left: {$margin}em">
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="$margin"/>
+         </xsl:call-template>
+         <span class="group">
             <xsl:text>End Group: </xsl:text>
             <xsl:copy-of select="$grpLink"/>
-         </span><br/>
+         </span>
+         <xsl:text>&#xa;</xsl:text>
       </xsl:if>
    </xsl:template>
 
@@ -4919,6 +4144,9 @@ div#legend div.hint {
                 If true, display element using 'inherited' CSS class.
             isNewField (boolean) optional
                 If true, display element using 'newFields' CSS class.
+            typeList (String) optional
+                List of types in this call chain. Name of type starts
+                with '*', and ends with '+'. (Used to prevent infinite
             schemaLoc (String) optional
                 Schema file containing this element declaration
                 or reference; if in current schema, 'schemaLoc' is
@@ -4930,6 +4158,7 @@ div#legend div.hint {
       <xsl:param name="isInherited">false</xsl:param>
       <xsl:param name="isNewField">false</xsl:param>
       <xsl:param name="schemaLoc">this</xsl:param>
+      <xsl:param name="typeList"/>
 
       <!-- Element Tag -->
       <xsl:variable name="elemTag">
@@ -4960,75 +4189,93 @@ div#legend div.hint {
             </xsl:otherwise>
          </xsl:choose>
       </xsl:variable>
+      <xsl:variable name="typeHierarchy">
+         <xsl:value-of select="$typeList"/>
+      </xsl:variable>
 
-      <div style="margin-left: {$margin}em">
-         <xsl:choose>
-            <xsl:when test="$isNewField!='false'">
-               <xsl:attribute name="class">newFields</xsl:attribute>
-            </xsl:when>
-            <xsl:when test="$isInherited!='false'">
-               <xsl:attribute name="class">inherited</xsl:attribute>
-            </xsl:when>
-         </xsl:choose>
+      <xsl:call-template name="Repeat">
+         <xsl:with-param name="content">
+            <xsl:text> </xsl:text>
+         </xsl:with-param>
+         <xsl:with-param name="count" select="$margin"/>
+      </xsl:call-template>
 
-         <!-- Start Tag -->
+      <xsl:choose>
+         <xsl:when test="$isNewField!='false'">
+            <xsl:attribute name="class">newFields</xsl:attribute>
+         </xsl:when>
+         <xsl:when test="$isInherited!='false'">
+            <xsl:attribute name="class">inherited</xsl:attribute>
+         </xsl:when>
+      </xsl:choose>
+
+      <!-- Start Tag -->
+      <span class="nt">
          <xsl:text>&lt;</xsl:text>
          <xsl:copy-of select="$elemTag"/>
          <xsl:text>></xsl:text>
+      </span>
 
-         <!-- Contents -->
-         <xsl:text> </xsl:text>
-         <xsl:choose>
-            <!-- Fixed value is provided -->
-            <xsl:when test="$element/@fixed">
-               <span class="fixed">
-                  <xsl:value-of select="$element/@fixed"/>
-               </span>
-            </xsl:when>
-            <!-- Type reference is provided -->
-            <xsl:when test="$element/@name and $element/@type">
-               <xsl:call-template name="PrintTypeRef">
-                  <xsl:with-param name="ref" select="$element/@type"/>
-                  <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
-               </xsl:call-template>
-            </xsl:when>
-            <!-- Local simple type definition is provided -->
-            <xsl:when test="$element/@name and $element/xsd:simpleType">
-               <xsl:apply-templates select="$element/xsd:simpleType" mode="sample">
-                  <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
-               </xsl:apply-templates>
-            </xsl:when>
-            <xsl:otherwise>
-               <xsl:text>...</xsl:text>
-            </xsl:otherwise>
-         </xsl:choose>
-         <xsl:text> </xsl:text>
-
-         <!-- Identity Constraints -->
-         <xsl:if test="$element/xsd:unique or $element/xsd:key or $element/xsd:keyref">
-            <xsl:apply-templates select="$element/xsd:unique | $element/xsd:key | $element/xsd:keyref" mode="sample">
-               <xsl:with-param name="margin" select="$ELEM_INDENT"/>
+      <!-- Contents -->
+      <xsl:text> </xsl:text>
+      <xsl:choose>
+         <!-- Fixed value is provided -->
+         <xsl:when test="$element/@fixed">
+            <span class="fixed">
+               <xsl:value-of select="$element/@fixed"/>
+            </span>
+         </xsl:when>
+         <!-- Type reference is provided -->
+         <xsl:when test="$element/@name and $element/@type">
+            <xsl:call-template name="PrintTypeRef">
+               <xsl:with-param name="ref" select="$element/@type"/>
+               <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
+            </xsl:call-template>
+         </xsl:when>
+         <!-- Local simple type definition is provided -->
+         <xsl:when test="$element/@name and $element/xsd:simpleType">
+            <xsl:apply-templates select="$element/xsd:simpleType" mode="sample">
                <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
             </xsl:apply-templates>
-         </xsl:if>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:text>...</xsl:text>
+         </xsl:otherwise>
+      </xsl:choose>
+      <xsl:text> </xsl:text>
 
-         <!-- End Tag -->
+      <!-- Identity Constraints -->
+      <xsl:if test="$element/xsd:unique or $element/xsd:key or $element/xsd:keyref">
+         <xsl:text>&#xa;</xsl:text>
+         <xsl:apply-templates select="$element/xsd:unique | $element/xsd:key | $element/xsd:keyref" mode="sample">
+            <xsl:with-param name="margin" select="number($margin) + number($ELEM_INDENT)"/>
+            <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
+         </xsl:apply-templates>
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="$margin"/>
+         </xsl:call-template>
+      </xsl:if>
+
+      <!-- End Tag -->
+      <span class="nt">
          <xsl:text>&lt;/</xsl:text>
          <xsl:copy-of select="$elemTag"/>
          <xsl:text>></xsl:text>
+      </span>
 
-         <xsl:if test="local-name($element/..)!='schema'">
-            <!-- Min/max occurs information -->
-            <xsl:text> </xsl:text>
-            <xsl:call-template name="PrintOccurs">
-               <xsl:with-param name="component" select="$element"/>
-            </xsl:call-template>
-            <!-- Documentation -->
-            <xsl:call-template name="PrintSampleDocumentation">
-               <xsl:with-param name="component" select="$element"/>
-            </xsl:call-template>
-         </xsl:if>
-      </div>
+      <xsl:if test="local-name($element/..)!='schema'">
+         <!-- Min/max occurs information -->
+         <xsl:text> </xsl:text>
+         <xsl:call-template name="PrintOccurs">
+            <xsl:with-param name="component" select="$element"/>
+         </xsl:call-template>
+         <!-- Documentation -->
+         <xsl:call-template name="PrintSampleDocumentation">
+            <xsl:with-param name="component" select="$element"/>
+         </xsl:call-template>
+      </xsl:if>
+      <xsl:text>&#xa;</xsl:text>
    </xsl:template>
 
    <!--
@@ -5099,155 +4346,188 @@ div#legend div.hint {
                </xsl:choose>
             </xsl:variable>
 
-            <div style="margin-left: {$margin}em">
-               <xsl:choose>
-                  <xsl:when test="$isNewField!='false'">
-                     <xsl:attribute name="class">newFields</xsl:attribute>
-                  </xsl:when>
-                  <xsl:when test="$isInherited!='false'">
-                     <xsl:attribute name="class">inherited</xsl:attribute>
-                  </xsl:when>
-               </xsl:choose>
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+               <xsl:with-param name="count" select="$margin"/>
+            </xsl:call-template>
+            <xsl:choose>
+               <xsl:when test="$isNewField!='false'">
+                  <xsl:attribute name="class">newFields</xsl:attribute>
+               </xsl:when>
+               <xsl:when test="$isInherited!='false'">
+                  <xsl:attribute name="class">inherited</xsl:attribute>
+               </xsl:when>
+            </xsl:choose>
 
-               <!-- Start Tag -->
+            <!-- Start Tag -->
+            <span class="nt">
                <xsl:text>&lt;</xsl:text>
                <xsl:copy-of select="$tag"/>
+            </span>
 
-               <!-- Print attributes -->
+            <!-- Get attributes -->
+            <xsl:variable name="attributes">
                <xsl:call-template name="PrintSampleTypeAttrs">
                   <xsl:with-param name="type" select="$type"/>
                   <xsl:with-param name="isInherited" select="$isInherited"/>
                   <xsl:with-param name="isNewField" select="$isNewField"/>
-                  <xsl:with-param name="margin" select="$ATTR_INDENT"/>
+                  <xsl:with-param name="margin" select="number($margin) + number($ATTR_INDENT)"/>
                   <xsl:with-param name="fromTopCType" select="$fromTopCType"/>
                   <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
                   <xsl:with-param name="typeList" select="$typeList"/>
                </xsl:call-template>
+            </xsl:variable>
 
-               <!-- Get content -->
-               <xsl:variable name="content">
-                  <xsl:call-template name="PrintSampleTypeContent">
-                     <xsl:with-param name="type" select="$type"/>
-                     <xsl:with-param name="margin" select="$ELEM_INDENT"/>
-                     <xsl:with-param name="isInherited" select="$isInherited"/>
-                     <xsl:with-param name="isNewField" select="$isNewField"/>
-                     <xsl:with-param name="fromTopCType" select="$fromTopCType"/>
-                     <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
-                     <xsl:with-param name="typeList" select="$typeList"/>
-                     <xsl:with-param name="parentGroups" select="$parentGroups"/>
-                  </xsl:call-template>
-               </xsl:variable>
+            <!-- Print attributes -->
+            <xsl:if test="normalize-space($attributes)!=''">
+               <xsl:text>&#xa;</xsl:text>
+               <xsl:copy-of select="$attributes"/>
+            </xsl:if>
 
-               <!-- Find out if content type is mixed -->
-               <xsl:variable name="mixed">
-                  <xsl:choose>
-                     <xsl:when test="normalize-space(translate($type/xsd:complexContent/@mixed, 'TRUE', 'true'))='true' or normalize-space($type/xsd:complexContent/@mixed)='1'">
-                        <xsl:text>true</xsl:text>
-                     </xsl:when>
-                     <xsl:when test="normalize-space(translate($type/@mixed, 'TRUE', 'true'))='true' or normalize-space($type/@mixed)='1'">
-                        <xsl:text>true</xsl:text>
-                     </xsl:when>
-                     <xsl:otherwise>
-                        <xsl:text>false</xsl:text>
-                     </xsl:otherwise>
-                  </xsl:choose>
-               </xsl:variable>
+            <!-- Get content -->
+            <xsl:variable name="content">
+               <xsl:call-template name="PrintSampleTypeContent">
+                  <xsl:with-param name="type" select="$type"/>
+                  <xsl:with-param name="margin" select="number($margin) + number($ELEM_INDENT)"/>
+                  <xsl:with-param name="isInherited" select="$isInherited"/>
+                  <xsl:with-param name="isNewField" select="$isNewField"/>
+                  <xsl:with-param name="fromTopCType" select="$fromTopCType"/>
+                  <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
+                  <xsl:with-param name="typeList" select="$typeList"/>
+                  <xsl:with-param name="parentGroups" select="$parentGroups"/>
+               </xsl:call-template>
+            </xsl:variable>
 
-               <!-- Find out if there are identity constraints -->
-               <xsl:variable name="hasIdConstraints">
-                  <xsl:if test="$element and ($element/xsd:unique or $element/xsd:key or $element/xsd:keyref)">
-                     <xsl:text>true</xsl:text>
-                  </xsl:if>
-               </xsl:variable>
-
-               <!-- Print content -->
+            <!-- Find out if content type is mixed -->
+            <xsl:variable name="mixed">
                <xsl:choose>
-                  <!-- Empty content -->
-                  <xsl:when test="$hasIdConstraints!='true' and normalize-space($content)=''">
-                     <!-- Close start tag -->
-                     <xsl:text>/> </xsl:text>
-
-                     <xsl:if test="$element and local-name($element/..)!='schema'">
-                        <!-- Occurrence info -->
-                        <xsl:text> </xsl:text>
-                        <xsl:call-template name="PrintOccurs">
-                           <xsl:with-param name="component" select="$element"/>
-                        </xsl:call-template>
-
-                        <!-- Documentation -->
-                        <xsl:call-template name="PrintSampleDocumentation">
-                           <xsl:with-param name="component" select="$element"/>
-                        </xsl:call-template>
-                     </xsl:if>
+                  <xsl:when test="normalize-space(translate($type/xsd:complexContent/@mixed, 'TRUE', 'true'))='true' or normalize-space($type/xsd:complexContent/@mixed)='1'">
+                     <xsl:text>true</xsl:text>
+                  </xsl:when>
+                  <xsl:when test="normalize-space(translate($type/@mixed, 'TRUE', 'true'))='true' or normalize-space($type/@mixed)='1'">
+                     <xsl:text>true</xsl:text>
                   </xsl:when>
                   <xsl:otherwise>
-                     <!-- Close start tag -->
-                     <xsl:text>> </xsl:text>
+                     <xsl:text>false</xsl:text>
+                  </xsl:otherwise>
+               </xsl:choose>
+            </xsl:variable>
 
-                     <xsl:if test="$element and local-name($element/..)!='schema'">
-                        <!-- Occurrence info -->
-                        <xsl:text> </xsl:text>
-                        <xsl:call-template name="PrintOccurs">
-                           <xsl:with-param name="component" select="$element"/>
-                        </xsl:call-template>
+            <!-- Find out if there are identity constraints -->
+            <xsl:variable name="hasIdConstraints">
+               <xsl:if test="$element and ($element/xsd:unique or $element/xsd:key or $element/xsd:keyref)">
+                  <xsl:text>true</xsl:text>
+               </xsl:if>
+            </xsl:variable>
 
-                        <!-- Documentation -->
-                        <xsl:text> </xsl:text>
-                        <xsl:call-template name="PrintSampleDocumentation">
-                           <xsl:with-param name="component" select="$element"/>
-                        </xsl:call-template>
-                     </xsl:if>
+            <!-- Print content -->
+            <xsl:choose>
+               <!-- Empty content -->
+               <xsl:when test="$hasIdConstraints!='true' and normalize-space($content)=''">
+                  <!-- Close start tag -->
+                  <span class="nt">
+                     <xsl:text>/> </xsl:text>
+                  </span>
 
-                     <!-- Identity Constraints -->
-                     <xsl:if test="$element">
-                        <xsl:apply-templates select="$element/xsd:unique | $element/xsd:key | $element/xsd:keyref" mode="sample">
-                           <xsl:with-param name="margin" select="$ELEM_INDENT"/>
-                        </xsl:apply-templates>
-                     </xsl:if>
+                  <xsl:if test="$element and local-name($element/..)!='schema'">
+                     <!-- Occurrence info -->
+                     <xsl:text> </xsl:text>
+                     <xsl:call-template name="PrintOccurs">
+                        <xsl:with-param name="component" select="$element"/>
+                     </xsl:call-template>
 
-                     <!-- Print out restriction/extension information -->
-                     <xsl:choose>
-                        <xsl:when test="false()">
-                        <!--<xsl:when test="$type/xsd:complexContent/xsd:restriction/@base">-->
-                           <br/><span class="other" style="margin-left: {$ELEM_INDENT}em">
-                              <xsl:text>&lt;!-- Restricts : </xsl:text>
-                              <xsl:call-template name="PrintTypeRef">
-                                 <xsl:with-param name="ref" select="$type/xsd:complexContent/xsd:restriction/@base"/>
-                                 <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
-                              </xsl:call-template>
-                              <xsl:text> --></xsl:text>
-                           </span>
-                        </xsl:when>
-                        <xsl:when test="false()">
-                        <!--<xsl:when test="$type/xsd:complexContent/xsd:extension/@base">-->
-                           <br/><span class="other" style="margin-left: {$ELEM_INDENT}em">
-                              <xsl:text>&lt;!-- Extends : </xsl:text>
-                              <xsl:call-template name="PrintTypeRef">
-                                 <xsl:with-param name="ref" select="$type/xsd:complexContent/xsd:extension/@base"/>
-                                 <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
-                              </xsl:call-template>
-                              <xsl:text> --></xsl:text>
-                           </span>
-                        </xsl:when>
-                     </xsl:choose>
+                     <!-- Documentation -->
+                     <xsl:call-template name="PrintSampleDocumentation">
+                        <xsl:with-param name="component" select="$element"/>
+                     </xsl:call-template>
+                  </xsl:if>
+                  <xsl:text>&#xa;</xsl:text>
+               </xsl:when>
+               <xsl:otherwise>
+                  <!-- Close start tag -->
+                  <xsl:call-template name="Repeat">
+                     <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                     <xsl:with-param name="count" select="$margin"/>
+                  </xsl:call-template>
+                  <span class="nt">
+                     <xsl:text>></xsl:text>
+                  </span>
 
-                     <!-- Print out message if has mixed content -->
-                     <xsl:if test="$mixed='true'">
+                  <xsl:if test="$element and local-name($element/..)!='schema'">
+                     <!-- Occurrence info -->
+                     <xsl:text> </xsl:text>
+                     <xsl:call-template name="PrintOccurs">
+                        <xsl:with-param name="component" select="$element"/>
+                     </xsl:call-template>
+
+                     <!-- Documentation -->
+                     <xsl:text> </xsl:text>
+                     <xsl:call-template name="PrintSampleDocumentation">
+                        <xsl:with-param name="component" select="$element"/>
+                     </xsl:call-template>
+                  </xsl:if>
+                  <xsl:text>&#xa;</xsl:text>
+
+                  <!-- Identity Constraints -->
+                  <xsl:if test="$element">
+                     <xsl:apply-templates select="$element/xsd:unique | $element/xsd:key | $element/xsd:keyref" mode="sample">
+                        <xsl:with-param name="margin" select="number($margin) + number($ELEM_INDENT)"/>
+                     </xsl:apply-templates>
+                  </xsl:if>
+
+                  <!-- Print out restriction/extension information -->
+                  <xsl:choose>
+                     <xsl:when test="false()">
+                     <!-- TODO: port. <xsl:when test="$type/xsd:complexContent/xsd:restriction/@base">-->
                         <br/><span class="other" style="margin-left: {$ELEM_INDENT}em">
-                           <xsl:text>&lt;!-- Mixed content --></xsl:text>
+                           <xsl:text>&lt;!-- Restricts : </xsl:text>
+                           <xsl:call-template name="PrintTypeRef">
+                              <xsl:with-param name="ref" select="$type/xsd:complexContent/xsd:restriction/@base"/>
+                              <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
+                           </xsl:call-template>
+                           <xsl:text> --></xsl:text>
                         </span>
-                     </xsl:if>
+                     </xsl:when>
+                     <xsl:when test="false()">
+                     <!-- TODO: port. <xsl:when test="$type/xsd:complexContent/xsd:extension/@base">-->
+                        <br/><span class="other" style="margin-left: {$ELEM_INDENT}em">
+                           <xsl:text>&lt;!-- Extends : </xsl:text>
+                           <xsl:call-template name="PrintTypeRef">
+                              <xsl:with-param name="ref" select="$type/xsd:complexContent/xsd:extension/@base"/>
+                              <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
+                           </xsl:call-template>
+                           <xsl:text> --></xsl:text>
+                        </span>
+                     </xsl:when>
+                  </xsl:choose>
 
-                     <!-- Element Content -->
-                     <xsl:copy-of select="$content"/>
+                  <!-- Print out message if has mixed content -->
+                  <xsl:if test="$mixed='true'">
+                     <xsl:call-template name="Repeat">
+                        <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                        <xsl:with-param name="count" select="number($margin) + number($ELEM_INDENT)"/>
+                     </xsl:call-template>
+                     <span class="c">
+                        <xsl:text>&lt;!-- Mixed content -->&#xa;</xsl:text>
+                     </span>
+                  </xsl:if>
 
-                     <!-- End Tag -->
+                  <!-- Element Content -->
+                  <xsl:copy-of select="$content"/>
+
+                  <!-- End Tag -->
+                  <xsl:call-template name="Repeat">
+                     <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                     <xsl:with-param name="count" select="$margin"/>
+                  </xsl:call-template>
+                  <span class="nt">
                      <xsl:text>&lt;/</xsl:text>
                      <xsl:copy-of select="$tag"/>
                      <xsl:text>></xsl:text>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </div>
+                  </span>
+               </xsl:otherwise>
+            </xsl:choose>
+            <xsl:text>&#xa;</xsl:text>
          </xsl:otherwise>
       </xsl:choose>
    </xsl:template>
@@ -5637,7 +4917,7 @@ div#legend div.hint {
       <xsl:param name="typeList"/>
       <xsl:param name="parentGroups"/>
 
-      <xsl:if test="$addBR='true'"><br/></xsl:if>
+      <!--<xsl:if test="$addBR='true'"><br/></xsl:if>-->
 
       <xsl:choose>
          <!-- Circular type hierarchy -->
@@ -5663,14 +4943,19 @@ div#legend div.hint {
             <xsl:choose>
                <!-- Complex type was not found. -->
                <xsl:when test="normalize-space($defLoc)='' or normalize-space($defLoc)='none' or normalize-space($defLoc)='xml' or normalize-space($defLoc)='xsd'">
-                  <div class="other" style="margin-left: {$margin}em;">
+                  <xsl:call-template name="Repeat">
+                     <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                     <xsl:with-param name="count" select="$margin"/>
+                  </xsl:call-template>
+                  <span class="c">
                      <xsl:text>&lt;!-- '</xsl:text>
                      <xsl:call-template name="PrintTypeRef">
                         <xsl:with-param name="ref" select="$restriction/@base"/>
                         <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
                      </xsl:call-template>
                      <xsl:text>' super type was not found in this schema. Some elements and attributes may be missing. --></xsl:text>
-                  </div>
+                  </span>
+                  <xsl:text>&#xa;</xsl:text>
                </xsl:when>
                <!-- Complex type was found. -->
                <xsl:otherwise>
@@ -5714,14 +4999,19 @@ div#legend div.hint {
 
             <xsl:choose>
                <xsl:when test="contains($typeList, concat('*', $baseTypeName, '+'))">
-                  <div class="other" style="margin-left: {$margin}em">
+                  <xsl:call-template name="Repeat">
+                     <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                     <xsl:with-param name="count" select="$margin"/>
+                  </xsl:call-template>
+                  <span class="c">
                      <xsl:text>&lt;-- Extends: </xsl:text>
                      <xsl:call-template name="PrintTypeRef">
                         <xsl:with-param name="ref" select="$extension/@base"/>
                         <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
                      </xsl:call-template>
                      <xsl:text> (Circular type hierarchy) --&gt;</xsl:text>
-                  </div>
+                  </span>
+                  <xsl:text>&#xa;</xsl:text>
                </xsl:when>
                <xsl:otherwise>
                   <!-- Look for base type -->
@@ -5759,14 +5049,19 @@ div#legend div.hint {
                      </xsl:when>
                      <!-- Complex type was not found. -->
                      <xsl:when test="normalize-space($defLoc)='' or normalize-space($defLoc)='none' or normalize-space($defLoc)='xml' or normalize-space($defLoc)='xsd'">
-                        <div class="other" style="margin-left: {$margin}em;">
+                        <xsl:call-template name="Repeat">
+                           <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                           <xsl:with-param name="count" select="$margin"/>
+                        </xsl:call-template>
+                        <span class="c">
                            <xsl:text>&lt;!-- '</xsl:text>
                            <xsl:call-template name="PrintTypeRef">
                               <xsl:with-param name="ref" select="$extension/@base"/>
                               <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
                            </xsl:call-template>
                            <xsl:text>' super type was not found in this schema. Some elements and attributes may be missing. --></xsl:text>
-                        </div>
+                        </span>
+                        <xsl:text>&#xa;</xsl:text>
                      </xsl:when>
                      <!-- Complex type was found in external schema. -->
                      <xsl:otherwise>
@@ -5832,14 +5127,16 @@ div#legend div.hint {
          <!-- Derivation by extension on simple content -->
          <xsl:when test="$type/xsd:simpleContent/xsd:extension">
             <!-- Print out base type name -->
-            <span style="margin-left: {$margin}em">
+            <xsl:call-template name="Repeat">
+               <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+               <xsl:with-param name="count" select="$margin"/>
+            </xsl:call-template>
                <xsl:text> </xsl:text>
                <xsl:call-template name="PrintTypeRef">
                   <xsl:with-param name="ref" select="$type/xsd:simpleContent/xsd:extension/@base"/>
                   <xsl:with-param name="schemaLoc" select="$schemaLoc"/>
                </xsl:call-template>
-               <xsl:text> </xsl:text>
-            </span><br/>
+               <xsl:text>&#xa;</xsl:text>
          </xsl:when>
          <!-- No derivation: complex type definition -->
          <xsl:when test="local-name($type)='complexType'">
@@ -6120,7 +5417,9 @@ div#legend div.hint {
       </xsl:variable>
 
       <xsl:call-template name="CollapseableBox">
-         <xsl:with-param name="id" select="concat($componentID, '_scbox')"/>
+         <xsl:with-param name="id" select="$componentID"/>
+         <xsl:with-param name="help" select="$HELP_REPRESENTATION"/>
+         <xsl:with-param name="anchor">schemaComponent</xsl:with-param>
          <xsl:with-param name="styleClass">schemaComponent</xsl:with-param>
          <xsl:with-param name="caption">Schema Component Representation</xsl:with-param>
          <xsl:with-param name="contents">
@@ -6573,11 +5872,11 @@ div#legend div.hint {
    <xsl:template match="comment()" mode="schemaComponent">
       <xsl:param name="margin">0</xsl:param>
 
-      <div class="comment" style="margin-left: {$margin}em">
+      <span class="comment" style="margin-left: {$margin}em">
          <xsl:text>&lt;--</xsl:text>
          <xsl:value-of select="."/>
          <xsl:text>--&gt;</xsl:text>
-      </div>
+      </span>
    </xsl:template>
 
    <!--
@@ -6620,15 +5919,18 @@ div#legend div.hint {
             <xsl:with-param name="prefix">
                <xsl:call-template name="GetXSDPrefix"/>
             </xsl:with-param>
-            <xsl:with-param name="nolink">true</xsl:with-param>
+<!--            <xsl:with-param name="nolink">true</xsl:with-param>-->
          </xsl:call-template>
          <xsl:value-of select="local-name($component)"/>
       </xsl:variable>
 
-      <div style="margin-left: {$margin}em">
          <!-- Start Tag -->
-         <xsl:text>&lt;</xsl:text>
-         <span class="scTag">
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+            <xsl:with-param name="count" select="$margin"/>
+         </xsl:call-template>
+         <span class="nt">
+            <xsl:text>&lt;</xsl:text>
             <xsl:copy-of select="$tag"/>
          </span>
          <!-- Attributes -->
@@ -6641,12 +5943,17 @@ div#legend div.hint {
                   <xsl:apply-templates select="$component/xsd:*[contains($includeFilter, concat('*', local-name(.), '+'))]" mode="schemaComponent">
                      <xsl:with-param name="margin" select="$ELEM_INDENT"/>
                   </xsl:apply-templates>
-                  <div class="scContent" style="margin-left: {$ELEM_INDENT}em">...</div>
+                  <xsl:call-template name="Repeat">
+                     <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                     <xsl:with-param name="count" select="$margin"/>
+                  </xsl:call-template>
+                  <span class="scContent">...</span>
+                  <xsl:text>&#xa;</xsl:text>
                </xsl:when>
                <!-- Exclude filter is on -->
                <xsl:when test="$excludeFilter!=''">
                   <xsl:apply-templates select="comment() | $component/xsd:*[not(contains($excludeFilter, concat('*', local-name(.), '+')))]" mode="schemaComponent">
-                     <xsl:with-param name="margin" select="$ELEM_INDENT"/>
+                     <xsl:with-param name="margin" select="number($margin) + number($ELEM_INDENT)"/>
                   </xsl:apply-templates>
                </xsl:when>
                <!-- Permits any content -->
@@ -6658,7 +5965,7 @@ div#legend div.hint {
                <!-- Contains schema elements -->
                <xsl:otherwise>
                   <xsl:apply-templates select="comment() | $component/xsd:*" mode="schemaComponent">
-                     <xsl:with-param name="margin" select="$ELEM_INDENT"/>
+                     <xsl:with-param name="margin" select="number($margin) + number($ELEM_INDENT)"/>
                   </xsl:apply-templates>
                </xsl:otherwise>
             </xsl:choose>
@@ -6668,25 +5975,35 @@ div#legend div.hint {
             <!-- Has content -->
             <xsl:when test="normalize-space($content)!=''">
                <!-- End of start tag -->
-               <xsl:text>></xsl:text>
+               <span class="nt">
+                  <xsl:text>></xsl:text>
+               </span>
+               <xsl:text>&#xa;</xsl:text>
 
                <!-- Content -->
                <xsl:copy-of select="$content"/>
 
                <!-- End Tag -->
-               <xsl:text>&lt;/</xsl:text>
-               <span class="scTag">
+               <xsl:call-template name="Repeat">
+                  <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+                  <xsl:with-param name="count" select="$margin"/>
+               </xsl:call-template>
+               <span class="nt">
+                  <xsl:text>&lt;/</xsl:text>
                   <xsl:copy-of select="$tag"/>
+                  <xsl:text>></xsl:text>
                </span>
-               <xsl:text>></xsl:text>
+               <xsl:text>&#xa;</xsl:text>
             </xsl:when>
             <!-- Empty content -->
             <xsl:otherwise>
                <!-- End of start tag -->
-               <xsl:text>/></xsl:text>
+               <span class="nt">
+                  <xsl:text>/></xsl:text>
+               </span>
+               <xsl:text>&#xa;</xsl:text>
             </xsl:otherwise>
          </xsl:choose>
-      </div>
    </xsl:template>
 
    <!--
@@ -6704,16 +6021,17 @@ div#legend div.hint {
       <xsl:param name="attrValue"/>
 
       <xsl:text> </xsl:text>
-      <span class="scTag">
+      <span class="na">
          <xsl:value-of select="$attrName"/>
+         <xsl:text>=</xsl:text>
       </span>
-      <xsl:text>="</xsl:text>
-      <xsl:if test="normalize-space($attrValue)!=''">
-         <span class="scContent">
+      <span class="s">
+         <xsl:text>"</xsl:text>
+         <xsl:if test="normalize-space($attrValue)!=''">
             <xsl:copy-of select="$attrValue"/>
-         </span>
-      </xsl:if>
-      <xsl:text>"</xsl:text>
+         </xsl:if>
+         <xsl:text>"</xsl:text>
+      </span>
    </xsl:template>
 
    <!--
@@ -6780,7 +6098,7 @@ div#legend div.hint {
      Displays an arbitrary XML element.
      -->
    <xsl:template match="*" mode="xpp">
-      <code>
+      <code class="test">
          <xsl:call-template name="WriteElement">
             <xsl:with-param name="element" select="."/>
             <xsl:with-param name="mode">xpp</xsl:with-param>
@@ -6799,11 +6117,11 @@ div#legend div.hint {
      Displays an XML comment.
      -->
    <xsl:template match="comment()" mode="xpp">
-      <div class="comment">
+      <span class="comment">
          <xsl:text>&lt;--</xsl:text>
          <xsl:value-of select="."/>
          <xsl:text>--&gt;</xsl:text>
-      </div>
+      </span>
    </xsl:template>
 
    <!--
@@ -6848,7 +6166,7 @@ div#legend div.hint {
                   <xsl:apply-templates select="$element/* | $element/text()" mode="html"/>
                </xsl:when>
                <xsl:otherwise>
-                  <div style="margin-left: {$ELEM_INDENT}em">
+                  <div class="fakeclass3" style="margin-left: {$ELEM_INDENT}em">
                      <xsl:apply-templates select="$element/* | $element/text()" mode="xpp"/>
                   </div>
                </xsl:otherwise>
@@ -6872,6 +6190,26 @@ div#legend div.hint {
       </xsl:choose>
    </xsl:template>
 
+   <!--
+     Repeatedly output a given parameter.
+     Param(s):
+            content (String) required
+              The content to be output
+            count (positive Integer) optional
+              The number of times to output the content, default is one.
+     -->
+   <xsl:template name="Repeat">
+      <xsl:param name="content"/>
+      <xsl:param name="count" select="1"/>
+
+      <xsl:if test="$count > 0">
+         <xsl:value-of select="$content"/>
+         <xsl:call-template name="Repeat">
+            <xsl:with-param name="content" select="$content"/>
+            <xsl:with-param name="count" select="$count - 1"/>
+         </xsl:call-template>
+      </xsl:if>
+   </xsl:template>
 
    <!-- ******** Templates for Handling References ******** -->
 
@@ -7751,7 +7089,7 @@ div#legend div.hint {
               Contents of box, which may appear and disappear
               with the press of a button.
             anchor (String) optional
-              Anchor, e.g. <a name="...", for this box
+              Anchor, e.g. <a id="...", for this box
             styleClass (String) optional
               Additional CSS class for the entire collapseable box
             isOpened (String) optional
@@ -7761,49 +7099,82 @@ div#legend div.hint {
    <xsl:template name="CollapseableBox">
       <xsl:param name="id"/>
       <xsl:param name="caption"/>
+      <xsl:param name="help"/>
       <xsl:param name="contents"/>
       <xsl:param name="anchor"/>
       <xsl:param name="styleClass"/>
       <xsl:param name="isOpened">false</xsl:param>
+      <xsl:param name="omitPanelContainer">false</xsl:param>
+      <xsl:param name="containsCode">true</xsl:param>
 
       <xsl:variable name="buttonID" select="concat($id, '_button')"/>
+      <xsl:variable name="panelContentClass">
+         <xsl:choose>
+            <xsl:when test="normalize-space(translate($isOpened,'TRUE','true'))='true'">
+               <xsl:text>panel-collapse collapse in</xsl:text>
+            </xsl:when>
+            <xsl:otherwise>
+               <xsl:text>panel-collapse collapse</xsl:text>
+            </xsl:otherwise>
+         </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="panelTitleClass">
+         <xsl:choose>
+            <xsl:when test="normalize-space(translate($isOpened,'TRUE','true'))='true'">
+               <xsl:text>xs3p-panel-title</xsl:text>
+            </xsl:when>
+            <xsl:otherwise>
+               <xsl:text>xs3p-panel-title collapsed</xsl:text>
+            </xsl:otherwise>
+         </xsl:choose>
+      </xsl:variable>
 
-      <div class="{$styleClass} box">
-         <div>
-            <!-- Button to control the opening and closing of the 'div' box -->
-            <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true'">
-               <input type="button" id="{$buttonID}" class="control" onclick="switchState('{$id}'); return false;" style="display: none"/>
-               <!--
-                 Button's 'display' property is set to 'none',
-                 so that button will only be displayed if
-                 box can be successfully opened and closed.
-                 -->
-            </xsl:if>
+      <div class="panel-group" id="{$id}-{$anchor}-panel-group">
+      <div class="panel panel-default">
+         <div class="panel-heading">
             <!-- Box Title -->
-            <xsl:text> </xsl:text>
-            <span class="caption">
-               <xsl:choose>
-                  <xsl:when test="$anchor != ''">
-                     <a name="{$anchor}">
-                        <xsl:value-of select="$caption"/>
-                     </a>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:value-of select="$caption"/>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </span>
+            <h4 class="panel-title">
+               <a class="{$panelTitleClass}" data-toggle="collapse" data-parent="#{$id}-{$anchor}-panel-group" href="#{$id}-{$anchor}-collapse">
+                  <xsl:value-of select="$caption"/>
+               </a>
+               <xsl:if test="$help != ''">
+                  <span class="pull-right xs3p-panel-help">
+                     <button type="button" class="btn btn-doc" data-container="body" data-toggle="popover" data-placement="left" data-html="true" data-content="{$help}">
+                     <span class="glyphicon glyphicon-question-sign"><xsl:text> </xsl:text></span>
+                     </button>
+                  </span>
+               </xsl:if>
+            </h4>
          </div>
 
          <!-- Box Contents -->
-         <div id="{$id}" class="contents">
-            <xsl:copy-of select="$contents"/>
-         </div>
-         <xsl:if test="normalize-space(translate($useJavaScript,'TRUE','true'))='true'">
-            <xsl:call-template name="PrintJSCode">
-               <xsl:with-param name="code">setState('<xsl:value-of select="$id"/>', <xsl:value-of select="$isOpened"/>);</xsl:with-param>
-            </xsl:call-template>
-         </xsl:if>
+         <xsl:choose>
+            <xsl:when test="normalize-space(translate($omitPanelContainer,'TRUE','true'))='true'">
+               <div id="{$id}-{$anchor}-collapse" class="{$panelContentClass}">
+                  <xsl:copy-of select="$contents"/>
+               </div>
+            </xsl:when>
+            <xsl:otherwise>
+               <div id="{$id}-{$anchor}-collapse" class="{$panelContentClass}">
+                  <div class="panel-body">
+                     <xsl:choose>
+                        <xsl:when test="not(normalize-space($contents))">
+                          No documentation provided.
+                        </xsl:when>
+                        <xsl:when test="normalize-space(translate($containsCode,'TRUE','true'))='true'">
+                           <pre class="codehilite">
+                              <xsl:copy-of select="$contents"/>
+                           </pre>
+                        </xsl:when>
+                        <xsl:otherwise>
+                           <xsl:copy-of select="$contents"/>
+                        </xsl:otherwise>
+                     </xsl:choose>
+                  </div>
+               </div>
+            </xsl:otherwise>
+         </xsl:choose>
+      </div>
       </div>
    </xsl:template>
 
@@ -8251,7 +7622,7 @@ was not specified in the links file, <xsl:value-of select="$linksFile"/>.
          </xsl:choose>
       </xsl:variable>
 
-      <span class="occurs">
+      <span class="cs">
          <xsl:choose>
             <xsl:when test="number($min)=1 and number($max)=1">
                <xsl:text>[1]</xsl:text>
@@ -8531,6 +7902,8 @@ was not specified in the links file, <xsl:value-of select="$linksFile"/>.
               Process contents attribute of wildcard
             namespaces (String) required
               Namespace attribute of wildcard
+            margin (non-negative Integer) optional
+              The amount of spaces to indent
      -->
    <xsl:template name="PrintWildcard">
       <xsl:param name="componentType">element</xsl:param>
@@ -8538,117 +7911,127 @@ was not specified in the links file, <xsl:value-of select="$linksFile"/>.
       <xsl:param name="processContents"/>
       <xsl:param name="minOccurs"/>
       <xsl:param name="maxOccurs"/>
+      <xsl:param name="margin" select="$ATTR_INDENT"/>
 
-      <xsl:text>Allow any </xsl:text>
-      <xsl:value-of select="$componentType"/>
-      <xsl:text>s from </xsl:text>
+      <!--<xsl:text>&#xa;</xsl:text>-->
+      <xsl:call-template name="Repeat">
+         <xsl:with-param name="content"><xsl:text> </xsl:text></xsl:with-param>
+         <xsl:with-param name="count" select="$margin"/>
+      </xsl:call-template>
 
-      <xsl:choose>
-         <!-- ##any -->
-         <xsl:when test="not($namespace) or normalize-space($namespace)='##any'">
-            <xsl:text>any namespace</xsl:text>
-         </xsl:when>
-         <!-- ##other -->
-         <xsl:when test="normalize-space($namespace)='##other'">
-            <xsl:text>a namespace other than this schema's namespace</xsl:text>
-         </xsl:when>
-         <!-- ##targetNamespace, ##local, specific namespaces -->
-         <xsl:otherwise>
-            <!-- ##targetNamespace -->
-            <xsl:variable name="hasTargetNS">
-               <xsl:if test="contains($namespace, '##targetNamespace')">
-                  <xsl:text>true</xsl:text>
+      <span class="cs">
+         <xsl:text>Allow any </xsl:text>
+         <xsl:value-of select="$componentType"/>
+         <xsl:text>s from </xsl:text>
+
+         <xsl:choose>
+            <!-- ##any -->
+            <xsl:when test="not($namespace) or normalize-space($namespace)='##any'">
+               <xsl:text>any namespace</xsl:text>
+            </xsl:when>
+            <!-- ##other -->
+            <xsl:when test="normalize-space($namespace)='##other'">
+               <xsl:text>a namespace other than this schema's namespace</xsl:text>
+            </xsl:when>
+            <!-- ##targetNamespace, ##local, specific namespaces -->
+            <xsl:otherwise>
+               <!-- ##targetNamespace -->
+               <xsl:variable name="hasTargetNS">
+                  <xsl:if test="contains($namespace, '##targetNamespace')">
+                     <xsl:text>true</xsl:text>
+                  </xsl:if>
+               </xsl:variable>
+               <!-- ##local -->
+               <xsl:variable name="hasLocalNS">
+                  <xsl:if test="contains($namespace, '##local')">
+                     <xsl:text>true</xsl:text>
+                  </xsl:if>
+               </xsl:variable>
+               <!-- Specific namespaces -->
+               <!-- Remove '##targetNamespace' string if any-->
+               <xsl:variable name="temp">
+                  <xsl:choose>
+                     <xsl:when test="$hasTargetNS='true'">
+                        <xsl:value-of select="concat(substring-before($namespace, '##targetNamespace'), substring-after($namespace, '##targetNamespace'))"/>
+                     </xsl:when>
+                     <xsl:otherwise>
+                        <xsl:value-of select="$namespace"/>
+                     </xsl:otherwise>
+                  </xsl:choose>
+               </xsl:variable>
+               <!-- Remove '##local' string if any -->
+               <xsl:variable name="specificNS">
+                  <xsl:choose>
+                     <xsl:when test="$hasLocalNS='true'">
+                        <xsl:value-of select="concat(substring-before($temp, '##local'), substring-after($temp, '##local'))"/>
+                     </xsl:when>
+                     <xsl:otherwise>
+                        <xsl:value-of select="$temp"/>
+                     </xsl:otherwise>
+                  </xsl:choose>
+               </xsl:variable>
+               <xsl:variable name="hasSpecificNS">
+                  <xsl:if test="normalize-space($specificNS)!=''">
+                     <xsl:text>true</xsl:text>
+                  </xsl:if>
+               </xsl:variable>
+
+               <xsl:if test="$hasLocalNS='true'">
+                  <xsl:text>no namespace</xsl:text>
                </xsl:if>
-            </xsl:variable>
-            <!-- ##local -->
-            <xsl:variable name="hasLocalNS">
-               <xsl:if test="contains($namespace, '##local')">
-                  <xsl:text>true</xsl:text>
+
+               <xsl:if test="$hasTargetNS='true'">
+                  <xsl:choose>
+                     <xsl:when test="$hasLocalNS='true' and $hasSpecificNS!='true'">
+                        <xsl:text> and </xsl:text>
+                     </xsl:when>
+                     <xsl:when test="$hasLocalNS='true'">
+                        <xsl:text>, </xsl:text>
+                     </xsl:when>
+                  </xsl:choose>
+                  <xsl:text>this schema's namespace</xsl:text>
                </xsl:if>
-            </xsl:variable>
-            <!-- Specific namespaces -->
-            <!-- Remove '##targetNamespace' string if any-->
-            <xsl:variable name="temp">
-               <xsl:choose>
-                  <xsl:when test="$hasTargetNS='true'">
-                     <xsl:value-of select="concat(substring-before($namespace, '##targetNamespace'), substring-after($namespace, '##targetNamespace'))"/>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:value-of select="$namespace"/>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </xsl:variable>
-            <!-- Remove '##local' string if any -->
-            <xsl:variable name="specificNS">
-               <xsl:choose>
-                  <xsl:when test="$hasLocalNS='true'">
-                     <xsl:value-of select="concat(substring-before($temp, '##local'), substring-after($temp, '##local'))"/>
-                  </xsl:when>
-                  <xsl:otherwise>
-                     <xsl:value-of select="$temp"/>
-                  </xsl:otherwise>
-               </xsl:choose>
-            </xsl:variable>
-            <xsl:variable name="hasSpecificNS">
-               <xsl:if test="normalize-space($specificNS)!=''">
-                  <xsl:text>true</xsl:text>
+
+               <xsl:if test="$hasSpecificNS='true'">
+                  <xsl:choose>
+                     <xsl:when test="$hasTargetNS='true' and $hasLocalNS='true'">
+                        <xsl:text>, and </xsl:text>
+                     </xsl:when>
+                     <xsl:when test="$hasTargetNS='true' or $hasLocalNS='true'">
+                        <xsl:text> and </xsl:text>
+                     </xsl:when>
+                  </xsl:choose>
+                  <xsl:text>the following namespace(s): </xsl:text>
+                  <xsl:call-template name="PrintWhitespaceList">
+                     <xsl:with-param name="value" select="normalize-space($specificNS)"/>
+                     <xsl:with-param name="separator">,</xsl:with-param>
+                  </xsl:call-template>
                </xsl:if>
-            </xsl:variable>
+            </xsl:otherwise>
+         </xsl:choose>
+         <!-- Process contents -->
+         <xsl:text> (</xsl:text>
+         <xsl:choose>
+            <xsl:when test="$processContents">
+               <xsl:value-of select="normalize-space($processContents)"/>
+            </xsl:when>
+            <xsl:otherwise>
+               <xsl:text>strict</xsl:text>
+            </xsl:otherwise>
+         </xsl:choose>
+         <xsl:text> validation)</xsl:text>
+         <xsl:text>.</xsl:text>
 
-            <xsl:if test="$hasLocalNS='true'">
-               <xsl:text>no namespace</xsl:text>
-            </xsl:if>
-
-            <xsl:if test="$hasTargetNS='true'">
-               <xsl:choose>
-                  <xsl:when test="$hasLocalNS='true' and $hasSpecificNS!='true'">
-                     <xsl:text> and </xsl:text>
-                  </xsl:when>
-                  <xsl:when test="$hasLocalNS='true'">
-                     <xsl:text>, </xsl:text>
-                  </xsl:when>
-               </xsl:choose>
-               <xsl:text>this schema's namespace</xsl:text>
-            </xsl:if>
-
-            <xsl:if test="$hasSpecificNS='true'">
-               <xsl:choose>
-                  <xsl:when test="$hasTargetNS='true' and $hasLocalNS='true'">
-                     <xsl:text>, and </xsl:text>
-                  </xsl:when>
-                  <xsl:when test="$hasTargetNS='true' or $hasLocalNS='true'">
-                     <xsl:text> and </xsl:text>
-                  </xsl:when>
-               </xsl:choose>
-               <xsl:text>the following namespace(s): </xsl:text>
-               <xsl:call-template name="PrintWhitespaceList">
-                  <xsl:with-param name="value" select="normalize-space($specificNS)"/>
-                  <xsl:with-param name="separator">,</xsl:with-param>
-               </xsl:call-template>
-            </xsl:if>
-         </xsl:otherwise>
-      </xsl:choose>
-      <!-- Process contents -->
-      <xsl:text> (</xsl:text>
-      <xsl:choose>
-         <xsl:when test="$processContents">
-            <xsl:value-of select="normalize-space($processContents)"/>
-         </xsl:when>
-         <xsl:otherwise>
-            <xsl:text>strict</xsl:text>
-         </xsl:otherwise>
-      </xsl:choose>
-      <xsl:text> validation)</xsl:text>
-      <xsl:text>.</xsl:text>
-
-      <!-- Print min/max occurs -->
-      <xsl:if test="$componentType='element'">
-         <xsl:text> </xsl:text>
-         <xsl:call-template name="PrintOccurs">
-            <xsl:with-param name="minOccurs" select="$minOccurs"/>
-            <xsl:with-param name="maxOccurs" select="$maxOccurs"/>
-         </xsl:call-template>
-      </xsl:if>
+         <!-- Print min/max occurs -->
+         <xsl:if test="$componentType='element'">
+            <xsl:text> </xsl:text>
+            <xsl:call-template name="PrintOccurs">
+               <xsl:with-param name="minOccurs" select="$minOccurs"/>
+               <xsl:with-param name="maxOccurs" select="$maxOccurs"/>
+            </xsl:call-template>
+         </xsl:if>
+      </span>
+      <xsl:text>&#xa;</xsl:text>
    </xsl:template>
 
    <!--
@@ -8958,10 +8341,11 @@ was not specified in the links file, <xsl:value-of select="$linksFile"/>.
             </xsl:message>
          </xsl:when>
          <xsl:otherwise>
-            <span style="font-weight: bold; color: red">
+            <span class="err">
                <xsl:text>ERROR: </xsl:text>
                <xsl:value-of select="$errorMsg"/>
             </span>
+            <xsl:text>&#xa;</xsl:text>
          </xsl:otherwise>
       </xsl:choose>
    </xsl:template>
