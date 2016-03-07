@@ -3,22 +3,18 @@
 This tool generates nice-looking HTML documentation from XML Schema
 Descriptions.
 
-It is a fork of version 1.1.5 of the xs3p doc tool from:
-
-  http://xml.fiforms.org/xs3p/
-
-See the [original README](README_ORIG.txt) for more information.
+It is a fork of version 1.1.5 of the xs3p doc tool from
+http://xml.fiforms.org/xs3p/ - see the [original README](README_ORIG.txt) for
+more information.
 
 Added features include:
 
- - Complete re-design using [Bootstrap](https://getbootstrap.com "Bootstrap homepage").
+ - Complete re-design using [Bootstrap](https://getbootstrap.com "Bootstrap homepage")
  - Output of UTF-8 encoded files
  - Output of HTML5
  - Support [Markdown](https://daringfireball.net/projects/markdown/ "Markdown homepage")
-   formatting in `<documentation>` elements.
-
-The markdown support is implement with the [Pagedown
-library](https://code.google.com/archive/p/pagedown/).
+   formatting in `<documentation>` elements, powered by the
+   [Pagedown library](https://code.google.com/archive/p/pagedown/ "Pagedown homepage")
 
 You can see a nice example result here:
 
@@ -26,7 +22,7 @@ You can see a nice example result here:
 
 which is the result of [one of the
 examples](examples/address_annotated.xsd "XSD source of the example")
-that I added specifically to demonstrate the new features of this fork.
+added specifically to demonstrate the new features of this fork.
 
 Another interesting example is the result for the XML Schema .xsd itself:
 
