@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 RESULTS_DIR=xsltproc-results
 LINKS_FILE=links.xml
 XSLT_FILE=xs3p.xsl
@@ -17,14 +17,14 @@ do
   xsltproc --nonet --output $RESULTS_DIR/$f.html $XSLT_FILE $f
 done
 #    Test external links
-# XSD_FILE=address.xsd
-# echo "Generating documentation for: $XSD_FILE"
-# xsltproc --nonet --output $RESULTS_DIR/$XSD_FILE.html $XSLT_FILE $XSD_FILE
-# XSD_FILE=ipo.xsd
-# echo "Generating documentation for: $XSD_FILE"
-# xsltproc --param searchIncludedSchemas "'true'" --param linksFile "'links.xml'" --nonet --output $RESULTS_DIR/$XSD_FILE.html $XSLT_FILE $XSD_FILE
-# XSD_FILE=report.xsd
-# echo "Generating documentation for: $XSD_FILE"
-# xsltproc --param searchIncludedSchemas "'true'" --param linksFile "'links.xml'" --nonet --output $RESULTS_DIR/$XSD_FILE.html $XSLT_FILE $XSD_FILE
+XSD_FILE=address.xsd
+echo "Generating linked documentation for: $XSD_FILE"
+xsltproc --nonet --output $RESULTS_DIR/$XSD_FILE.html $XSLT_FILE $XSD_FILE
+XSD_FILE=ipo.xsd
+echo "Generating linked documentation for: $XSD_FILE"
+xsltproc --param searchIncludedSchemas "'true'" --param linksFile "'links.xml'" --nonet --output $RESULTS_DIR/$XSD_FILE.html $XSLT_FILE $XSD_FILE
+XSD_FILE=report.xsd
+echo "Generating linked documentation for: $XSD_FILE"
+xsltproc --param searchIncludedSchemas "'true'" --param linksFile "'links.xml'" --nonet --output $RESULTS_DIR/$XSD_FILE.html $XSLT_FILE $XSD_FILE
 #    Delete local copy of stylesheet
 rm $XSLT_FILE
