@@ -159,12 +159,12 @@
    <xsl:param name="externalCSSURL"></xsl:param>
 
    <!-- Link to JQuery. -->
-   <xsl:param name="jQueryURL">//code.jquery.com/jquery-2.2.1.min.js</xsl:param>
+   <xsl:param name="jQueryURL">https://code.jquery.com/jquery-2.2.1.min.js</xsl:param>
 
    <!-- Link base to Bootstrap CSS and JS. The files
         <bootstrapURL>/css/bootstrap.min.css and
         <bootstrapURL>/js/bootstrap.min.js must exist.-->
-   <xsl:param name="bootstrapURL">//netdna.bootstrapcdn.com/bootstrap/3.3.6</xsl:param>
+   <xsl:param name="bootstrapURL">https://netdna.bootstrapcdn.com/bootstrap/3.3.6</xsl:param>
 
    <!-- ******** Constants ******** -->
 
@@ -302,7 +302,7 @@
                </xsl:choose>
             </style>
 
-            <script src="//pagedown.googlecode.com/hg/Markdown.Converter.js">
+            <script src="https://pagedown.googlecode.com/hg/Markdown.Converter.js">
               // Import Markdown converter for comments processing
             </script>
 
