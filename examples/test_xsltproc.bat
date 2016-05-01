@@ -1,4 +1,4 @@
-rem You can install make xsltproc.exe available on Windows by using Chocolatey package manager.
+rem You can make xsltproc.exe available on Windows by using Chocolatey package manager.
 rem If you are using Chocolatey, just run "choco install strawberryperl" and after that the batch file should work.
 
 set RESULTS_DIR=msxsl-results
@@ -15,7 +15,7 @@ for %%f in (*.xsd) do xsltproc.exe --nonet --output %RESULTS_DIR%\%%f.html %XSLT
 
 rem Test external links
 rem set XSD_FILE=address.xsd
-rem msxsl %XSD_FILE% %XSLT_FILE% -t -o %RESULTS_DIR%\%XSD_FILE%.html searchImportedSchemas=true searchIncludedSchemas=true linksFile=%LINKS_FILE%
+rem xsltproc.exe --nonet --stringparam searchImportedSchemas true --stringparam searchIncludedSchemas true --stringparam linksFile %LINKS_FILE% --output %RESULTS_DIR%\%XSD_FILE%.html %XSLT_FILE% %XSD_FILE%
 
 rem Delete local copy of stylesheet
 del %XSLT_FILE%
