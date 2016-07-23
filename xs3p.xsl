@@ -159,12 +159,12 @@
    <xsl:param name="externalCSSURL"></xsl:param>
 
    <!-- Link to JQuery. -->
-   <xsl:param name="jQueryURL">https://code.jquery.com/jquery-2.2.1.min.js</xsl:param>
+   <xsl:param name="jQueryURL">https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js</xsl:param>
 
    <!-- Link base to Bootstrap CSS and JS. The files
         <bootstrapURL>/css/bootstrap.min.css and
         <bootstrapURL>/js/bootstrap.min.js must exist.-->
-   <xsl:param name="bootstrapURL">https://netdna.bootstrapcdn.com/bootstrap/3.3.6</xsl:param>
+   <xsl:param name="bootstrapURL">https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6</xsl:param>
 
    <!-- ******** Constants ******** -->
 
@@ -302,7 +302,7 @@
                </xsl:choose>
             </style>
 
-            <script src="https://pagedown.googlecode.com/hg/Markdown.Converter.js">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/pagedown/1.0/Markdown.Converter.js">
               // Import Markdown converter for comments processing
             </script>
 
@@ -433,6 +433,8 @@
                   var indent = $(rawDocID).html().match("^\\n[\\t ]*");
                   if (!(indent === null)) {
                      normalized = $(rawDocID).html().replace(new RegExp(indent[0], "gm"), "\n");
+                  } else {
+                     normalized = $(rawDocID).html();
                   }
                   $(this).html(c.makeHtml(normalized));
                   $(this).find('code,pre').each(function(i, block) {
@@ -710,105 +712,105 @@
       <xsl:text disable-output-escaping="yes">
 /* XS3P specific CSS */
 body {
-	background-color: #FFF;
-	padding-top: 50px;
+    background-color: #FFF;
+    padding-top: 50px;
 }
 
 .nav &gt; li.active {
-	background-color: #FFF;
+    background-color: #FFF;
 }
 .nav &gt; li &gt; a:hover {
-	background-color: #CCC;
+    background-color: #CCC;
 }
 
 code {
-	color: #333;
+    color: #333;
 }
 
 .container-fluid {
-	padding: 15px 15px;
+    padding: 15px 15px;
 }
 
 .nav-sub-item &gt; a {
-	padding-left: 30px !important;
+    padding-left: 30px !important;
 }
 
 a.name {
-	padding-top: 65px;
+    padding-top: 65px;
 }
 
 h3.xs3p-subsection-heading {
-	margin-bottom: 30px;
+    margin-bottom: 30px;
 }
 
 section, #top {
-	margin-top: -65px;
-	padding-top: 65px;
+    margin-top: -65px;
+    padding-top: 65px;
 }
 
 pre {
-	padding: 5px;
+    padding: 5px;
 }
 
 .xs3p-sidenav {
-	padding-top: 10px;
-	padding-bottom: 10px;
-	background-color: #EEE;
-	border-radius: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: #EEE;
+    border-radius: 10px;
 }
 .xs3p-navbar-title {
-	color: #FFF !important;
-	font-weight: bold;
+    color: #FFF !important;
+    font-weight: bold;
 }
 .xs3p-in-panel-table {
-	margin-bottom: 0px;
+    margin-bottom: 0px;
 }
 .xs3p-sidebar {
-	position: static;
+    position: static;
 }
 .xs3p-collapse-button {
-	font-size: 8pt;
+    font-size: 8pt;
 }
 .panel-heading .xs3p-panel-title:after {
-	font-family: 'Glyphicons Halflings';
-	content: "\e114";
-	float: left;
-	color: grey;
-	margin-right: 10px;
+    font-family: 'Glyphicons Halflings';
+    content: "\e114";
+    float: left;
+    color: grey;
+    margin-right: 10px;
 }
 .panel-heading .xs3p-panel-title.collapsed:after {
-	content: "\e080";
+    content: "\e080";
 }
 .panel-info > .panel-heading .xs3p-panel-title:after {
-	color: white;
+    color: white;
 }
 .xs3p-panel-help {
-	color: #CCCCCC;
-	cursor: pointer;
+    color: #CCCCCC;
+    cursor: pointer;
 }
 
 .panel-group {
-	margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .btn-doc {
-	padding: 0px;
-	border: 0px none;
-	background: none repeat scroll 0% 0% transparent;
-	line-height: 1;
-	font-size: 12px;
+    padding: 0px;
+    border: 0px none;
+    background: none repeat scroll 0% 0% transparent;
+    line-height: 1;
+    font-size: 12px;
 }
 
 .unpre {
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 14px;
-	white-space: normal;
-	word-break: normal;
-	word-wrap: normal;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    white-space: normal;
+    word-break: normal;
+    word-wrap: normal;
 }
 
 .popover {
-	max-width: 400px;
+    max-width: 400px;
 }
 
 // Syntax highlighting
@@ -823,11 +825,11 @@ pre {
 .codehilite a:hover {opacity: 0.7 !important;}
 
 @media (min-width: 992px) {
-	.xs3p-sidebar {
-		position: fixed;
-		top: 65px;
-		width: 22%;
-	}
+    .xs3p-sidebar {
+        position: fixed;
+        top: 65px;
+        width: 22%;
+    }
 }
 </xsl:text>
    </xsl:template>
