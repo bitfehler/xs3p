@@ -2480,6 +2480,11 @@ pre {
      -->
    <xsl:template match="*" mode="properties"/>
 
+   <!--
+     Emtpy template to avoid unwanted output in 'hiddendoc' mode
+     -->
+   <xsl:template match="text()" mode="hiddendoc"/>
+  
    <xsl:template match="xsd:element | xsd:attribute | xsd:simpleType" mode="hiddendoc">
       <xsl:if test="./xsd:annotation/xsd:documentation">
          <xsl:variable name="documentation">
