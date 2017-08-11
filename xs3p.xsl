@@ -2480,11 +2480,6 @@ pre {
      -->
    <xsl:template match="*" mode="properties"/>
 
-   <!--
-     Emtpy template to avoid unwanted output in 'hiddendoc' mode
-     -->
-   <xsl:template match="text()" mode="hiddendoc"/>
-
    <xsl:template match="xsd:element | xsd:attribute | xsd:simpleType" mode="hiddendoc">
       <xsl:if test="./xsd:annotation/xsd:documentation">
          <xsl:variable name="documentation">
@@ -2530,16 +2525,7 @@ pre {
            </div>
          </div>
       </xsl:if>
-   </xsl:template>
-
-   <!--
-     Print hidden documentation blocks for each documented element.
-     Generates pop-up divs for 'annotation' elements, if required.
-        Param(s):
-            component (Node) required
-                Schema component
-     -->
-   <xsl:template match="*" mode="hiddendoc">
+     
       <xsl:apply-templates select="child::node()" mode="hiddendoc"/>
    </xsl:template>
 
