@@ -14,7 +14,7 @@ Added features include:
  - Output of HTML5
  - Support [Markdown](https://daringfireball.net/projects/markdown/ "Markdown homepage")
    formatting in `<documentation>` elements, powered by the
-   [markdown-id library](https://github.com/markdown-it/markdown-it)
+   [markdown-it library](https://github.com/markdown-it/markdown-it)
 
 You can see a nice example result here:
 
