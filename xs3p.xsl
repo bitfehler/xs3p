@@ -8108,6 +8108,10 @@ was not specified in the links file, <xsl:value-of select="$linksFile"/>.
             <xsl:if test="position()!=1">
                <xsl:text>|</xsl:text>
             </xsl:if>
+            <xsl:if test="count($simpleRestrict/xsd:enumeration)>5">
+               <xsl:text>
+    </xsl:text>
+            </xsl:if>
             <xsl:text>'</xsl:text>
             <xsl:value-of select="@value"/>
             <xsl:text>'</xsl:text>
