@@ -3566,6 +3566,7 @@ pre {
       <xsl:param name="schemaLoc">this</xsl:param>
 
       <xsl:if test="normalize-space(@maxOccurs)!='0'">
+         <xsl:apply-templates select="." mode="hiddendoc"/>
          <xsl:call-template name="PrintSampleSimpleElement">
             <xsl:with-param name="element" select="."/>
             <xsl:with-param name="margin" select="$margin"/>
