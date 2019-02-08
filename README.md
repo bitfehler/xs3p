@@ -1,3 +1,7 @@
+# Project discontinued
+
+I haven't had to deal with XML and releated technologies for many years now and I don't feel capable of making informed decisions about this project anymore. I would like to thank everyone who contributed or wanted to contribute for their interest. I recommend you browse the available forks and find one that is still actively developed.
+
 # xs3p XSD documentation generator
 
 This tool generates nice-looking HTML documentation from XML Schema
