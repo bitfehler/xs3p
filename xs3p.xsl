@@ -159,12 +159,12 @@
    <xsl:param name="externalCSSURL"></xsl:param>
 
    <!-- Link to JQuery. -->
-   <xsl:param name="jQueryURL">https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js</xsl:param>
+   <xsl:param name="jQueryURL">https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js</xsl:param>
 
    <!-- Link base to Bootstrap CSS and JS. The files
         <bootstrapURL>/css/bootstrap.min.css and
         <bootstrapURL>/js/bootstrap.min.js must exist.-->
-   <xsl:param name="bootstrapURL">https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6</xsl:param>
+   <xsl:param name="bootstrapURL">https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7</xsl:param>
 
    <!-- ******** Constants ******** -->
 
@@ -301,11 +301,8 @@
                   </xsl:otherwise>
                </xsl:choose>
             </style>
-
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/pagedown/1.0/Markdown.Converter.js">
-              // Import Markdown converter for comments processing
-            </script>
-
+           
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.3.2/markdown-it.min.js"></script>
          </head>
          <body data-spy="scroll" data-target=".xs3p-sidebar" data-offset="65">
 
@@ -427,7 +424,7 @@
                $(function () { $("[data-toggle='tooltip']").tooltip(); });
                $(function () { $("[data-toggle='popover']").popover(); });
 
-               var c = new Markdown.Converter();
+               var c = window.markdownit();
                $('.xs3p-doc').each(function(i, obj) {
                   var rawDocID = '#' + $(this).attr('id') + '-raw';
                   var indent = $(rawDocID).html().match("^\\n[\\t ]*");
@@ -436,7 +433,7 @@
                   } else {
                      normalized = $(rawDocID).html();
                   }
-                  $(this).html(c.makeHtml(normalized));
+                  $(this).html(c.render(normalized));
                   $(this).find('code,pre').each(function(i, block) {
                      $(this).html($(this).text());
                   });
