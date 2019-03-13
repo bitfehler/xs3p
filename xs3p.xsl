@@ -2564,7 +2564,7 @@ pre {
                   <xsl:value-of select="text()"/>
                   <xsl:if test="./@source">
                      Linked documentation: <xsl:value-of select="./@source"/>
-                  </xsl:if>
+                  </xsl:if><xsl:text> </xsl:text>
                </div>
                <div class="xs3p-doc" id="{generate-id(.)}{$suffix}-doc"><xsl:text> </xsl:text></div>
             </div>
