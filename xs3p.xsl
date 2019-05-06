@@ -159,12 +159,12 @@
    <xsl:param name="externalCSSURL"></xsl:param>
 
    <!-- Link to JQuery. -->
-   <xsl:param name="jQueryURL">https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js</xsl:param>
+   <xsl:param name="jQueryURL">https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js</xsl:param>
 
    <!-- Link base to Bootstrap CSS and JS. The files
         <bootstrapURL>/css/bootstrap.min.css and
         <bootstrapURL>/js/bootstrap.min.js must exist.-->
-   <xsl:param name="bootstrapURL">https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6</xsl:param>
+   <xsl:param name="bootstrapURL">https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7</xsl:param>
 
    <!-- ******** Constants ******** -->
 
@@ -302,8 +302,11 @@
                </xsl:choose>
             </style>
 
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/pagedown/1.0/Markdown.Converter.js">
+            <script src="https://cdn.jsdelivr.net/gh/jeongsu816/pagedown-extra/pagedown/Markdown.Converter.js">
               // Import Markdown converter for comments processing
+            </script>
+            <script src="https://cdn.jsdelivr.net/gh/jeongsu816/pagedown-extra/Markdown.Extra.js">
+              // Import Markdown extra converter for comments processing
             </script>
 
          </head>
@@ -428,6 +431,7 @@
                $(function () { $("[data-toggle='popover']").popover(); });
 
                var c = new Markdown.Converter();
+               Markdown.Extra.init(c, {extensions: ["tables"], table_class: "table table-bordered"});
                $('.xs3p-doc').each(function(i, obj) {
                   var rawDocID = '#' + $(this).attr('id') + '-raw';
                   var indent = $(rawDocID).html().match("^\\n[\\t ]*");
@@ -3073,6 +3077,7 @@ pre {
                   <xsl:with-param name="component" select="."/>
                </xsl:call-template>
                <!-- Documentation -->
+               <xsl:apply-templates select="." mode="hiddendoc"/>
                <xsl:call-template name="PrintSampleDocumentation">
                   <xsl:with-param name="component" select="."/>
                </xsl:call-template>
@@ -3565,6 +3570,7 @@ pre {
       <xsl:param name="schemaLoc">this</xsl:param>
 
       <xsl:if test="normalize-space(@maxOccurs)!='0'">
+         <xsl:apply-templates select="." mode="hiddendoc"/>
          <xsl:call-template name="PrintSampleSimpleElement">
             <xsl:with-param name="element" select="."/>
             <xsl:with-param name="margin" select="$margin"/>
@@ -8106,6 +8112,10 @@ was not specified in the links file, <xsl:value-of select="$linksFile"/>.
          <xsl:for-each select="$simpleRestrict/xsd:enumeration">
             <xsl:if test="position()!=1">
                <xsl:text>|</xsl:text>
+            </xsl:if>
+            <xsl:if test="count($simpleRestrict/xsd:enumeration)>5">
+               <xsl:text>
+    </xsl:text>
             </xsl:if>
             <xsl:text>'</xsl:text>
             <xsl:value-of select="@value"/>
